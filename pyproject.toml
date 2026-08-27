@@ -1,0 +1,72 @@
+[project]
+name = "sc_midas"
+version = "0.1.2"
+
+description = "Staggered-Combination MIDAS model"
+
+authors = [
+    {name="James Kensett", email="James.Kensett@bankofengland.co.uk"},
+    {name="Paul Labonne", email="Paul.Labonne@bankofengland.co.uk"},
+    {name="Andre Moreira", email="Andre.Moreira@bankofengland.co.uk"},
+]
+
+maintainers = [
+    {name="James Kensett", email="James.Kensett@bankofengland.co.uk"},
+    {name="Paul Labonne", email="Paul.Labonne@bankofengland.co.uk"},
+]
+
+license = "MIT"
+
+readme = "README.md"
+
+requires-python = ">=3.10"
+
+dependencies = [
+    "numpy",
+    "jax",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pydoclint",
+    "ruff",
+    "pyarrow",
+    "pyfame",
+    "pytest",
+    "syrupy",
+]
+
+docs = [
+    "zensical",
+    "mkdocstrings[python]",
+]
+
+realtime = [
+    "forecast-realtime",
+    "news_decomp >= 0.0.7",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff.lint]
+# Exclude files and directories
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Ignore unused imports in __init__.py files
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

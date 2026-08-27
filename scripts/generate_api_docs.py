@@ -1,0 +1,111 @@
+import ast
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_ROOT = PROJECT_ROOT / "src" / "sc_midas"
+API_DOC = PROJECT_ROOT / "docs" / "api.md"
+PUBLIC_MODULES = (
+    ("High-level Pipeline", "sc_midas.midas_combo", PACKAGE_ROOT / "midas_combo.py"),
+    (
+        "MIDAS Regression (single indicator)",
+        "sc_midas.midas",
+        PACKAGE_ROOT / "midas.py",
+    ),
+    (
+        "Quarterly OLS (single regressor)",
+        "sc_midas.ols",
+        PACKAGE_ROOT / "ols.py",
+    ),
+    (
+        "Multi-Regressor MIDAS",
+        "sc_midas.multi_midas",
+        PACKAGE_ROOT / "multi_midas.py",
+    ),
+    ("Specifications", "sc_midas.specs", PACKAGE_ROOT / "specs.py"),
+    (
+        "Weighting Schemes",
+        "sc_midas.temporal_weights",
+        PACKAGE_ROOT / "temporal_weights.py",
+    ),
+    (
+        "Combination Weights",
+        "sc_midas.combo_weights",
+        PACKAGE_ROOT / "combo_weights.py",
+    ),
+    ("Example Data", "sc_midas.utils", PACKAGE_ROOT / "utils.py"),
+)
+
+
+def read_exports(path: Path) -> list[str]:
+    """Read a module's literal ``__all__`` declaration without importing it."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        if any(
+            isinstance(target, ast.Name) and target.id == "__all__"
+            for target in targets
+        ):
+            exports = ast.literal_eval(node.value)
+            if not isinstance(exports, list) or not all(
+                isinstance(name, str) for name in exports
+            ):
+                raise ValueError(f"{path}: __all__ must be a literal list of strings")
+            return exports
+    raise ValueError(f"{path}: no literal __all__ declaration found")
+
+
+def public_objects() -> list[tuple[str, list[str]]]:
+    """Return public object paths derived from module ``__all__`` declarations."""
+    module_exports = [
+        (section, namespace, read_exports(path))
+        for section, namespace, path in PUBLIC_MODULES
+    ]
+    root_exports = set(read_exports(PACKAGE_ROOT / "__init__.py"))
+    declared_exports = {name for _, _, exports in module_exports for name in exports}
+    missing_root_exports = root_exports - declared_exports
+    if missing_root_exports:
+        raise ValueError(
+            "sc_midas.__all__ contains names missing from public module __all__ "
+            f"declarations: {sorted(missing_root_exports)}"
+        )
+    return [
+        (section, [f"{namespace}.{name}" for name in exports])
+        for section, namespace, exports in module_exports
+    ]
+
+
+def render_api_page(sections: list[tuple[str, list[str]]]) -> str:
+    """Render the Markdown manifest that mkdocstrings consumes."""
+    lines = [
+        "# API Reference",
+        "",
+        (
+            "This script writes the API manifest for the public sc_midas API. "
+            "Zensical renders the API content from the current source."
+        ),
+        "",
+    ]
+    for section, objects in sections:
+        lines.extend((f"## {section}", ""))
+        for object_path in objects:
+            lines.extend(
+                (
+                    f"::: {object_path}",
+                    "    options:",
+                    "      show_source: false",
+                    "      show_root_heading: true",
+                    "",
+                )
+            )
+    return "\n".join(lines)
+
+
+def main() -> None:
+    """Update the generated API documentation manifest."""
+    API_DOC.write_text(render_api_page(public_objects()), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()

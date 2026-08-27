@@ -1,0 +1,96 @@
+# ============================================================================
+# Zensical configuration
+# ============================================================================
+
+[project]
+site_name  = "SC-MIDAS"
+site_description = "Staggered‑Combination MIDAS model"
+copyright = "Copyright &copy; Bank of England"
+
+nav = [
+  { "Home" = "index.md" },
+
+  { "User Guide" = [
+      { "MIDAS model" = "guide/midas_model.md" },
+      { "Multi-regressor MIDAS" = "guide/multi_midas.md" },
+      { "SC-MIDAS pipeline" = "guide/sc_midas.md" },
+      { "Real-time analysis" = "guide/realtime.md" },
+      { "Interpreting decompositions" = "guide/decomposition.md" },
+  ]},
+
+  { "Methods" = [
+      { "SC‑MIDAS framework" = "methods/sc_midas_framework.md" },
+      { "Weighting schemes" = "methods/combo.md" },
+  ]},
+
+  { "Examples" = [
+      { "MIDAS regression" = "notebooks/midas.md" },
+      { "Combination pipeline" = "notebooks/midas_combo.md" },
+  ]},
+
+  { "API Reference" = "api.md" },
+  { "Contributing" = "../CONTRIBUTING.md" },
+]
+
+# KaTeX math rendering
+extra_javascript = [
+  { path = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" },
+  { path = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" },
+  { path = "javascripts/katex.js" },
+]
+
+extra_css = [
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
+]
+
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "numpy"
+docstring_section_style = "spacy"
+show_source = false
+show_bases = false
+show_root_toc_entry = true
+heading_level = 3
+members_order = "source"
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+
+# ---------------------------------------------------------------------------
+# Markdown extensions
+# ---------------------------------------------------------------------------
+
+# Math
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+
+# Code blocks
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.snippets]
+
+# Admonitions
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.pymdownx.details]
+
+# Lists & formatting
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+[project.markdown_extensions.tables]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.md_in_html]
+
+[project.markdown_extensions.toc]
+permalink = true

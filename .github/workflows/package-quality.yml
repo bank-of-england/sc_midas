@@ -1,0 +1,58 @@
+name: Package quality
+
+# Run quality checks for pull requests, changes pushed to main, or a manual run.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git ref to check out"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Tests, lint, tests and documentation checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install package, development, and documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,docs]"
+
+      - name: Run Ruff linter
+        run: ruff check .
+
+      - name: Check Ruff formatting
+        run: ruff format --check .
+
+      - name: Check generated API documentation
+        run: |
+          python scripts/generate_api_docs.py
+          git diff --exit-code -- docs/api.md
+
+      - name: Check documentation
+        run: |
+          pydoclint --style=numpy .
+          zensical build --clean --strict
+
+      - name: Run tests
+        run: pytest
