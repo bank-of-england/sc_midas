@@ -4,10 +4,10 @@ Combination of MIDAS nowcasts.
 Pipeline
 --------
 1.  Accept quarterly target and monthly regressors as DataFrames.
-2.  Fit a :class:`~sc_midas.midas.MIDAS` model for each
-    :class:`~sc_midas.specs.MidasSpec`.
+2.  Fit a :class:`~nowcast_midas.midas.MIDAS` model for each
+    :class:`~nowcast_midas.specs.MidasSpec`.
 3.  Combine fitted values according to a hierarchy of
-    :class:`~sc_midas.specs.ComboSpec` nodes.
+    :class:`~nowcast_midas.specs.ComboSpec` nodes.
 
 Combination methods
 ~~~~~~~~~~~~~~~~~~~
@@ -918,7 +918,7 @@ class MidasCombo(_ComboPlots):
             self.fits_df_ = pd.concat(midas_dfs_list, ignore_index=True)
 
     def _fit_ols_models(self) -> None:
-        """Fit a quarterly :class:`~sc_midas.ols.OLS` model per :class:`OLSSpec`.
+        """Fit a quarterly :class:`~nowcast_midas.ols.OLS` model per :class:`OLSSpec`.
 
         Fitted values are mapped back into the full T-length target
         array (NaN where lags / dummies were missing) and stored under
@@ -998,7 +998,7 @@ class MidasCombo(_ComboPlots):
                 self.fits_df_ = ols_fits_df
 
     def _fit_multi_midas_models(self) -> None:
-        """Fit :class:`~sc_midas.multi_midas.MultiMIDAS` models per
+        """Fit :class:`~nowcast_midas.multi_midas.MultiMIDAS` models per
         :class:`MultiMidasSpec`.
 
         Fitted values are mapped back into the full T-length target

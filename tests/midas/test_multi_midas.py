@@ -1,5 +1,5 @@
-"""Tests for :class:`~sc_midas.multi_midas.MultiMIDAS` and
-:class:`~sc_midas.specs.MultiMidasSpec`.
+"""Tests for :class:`~nowcast_midas.multi_midas.MultiMIDAS` and
+:class:`~nowcast_midas.specs.MultiMidasSpec`.
 """
 
 from typing import ClassVar
@@ -8,18 +8,18 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import sc_midas.multi_midas as multi_midas_module
-from sc_midas.midas import MIDAS
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.multi_midas import MultiMIDAS
-from sc_midas.specs import (
+import nowcast_midas.multi_midas as multi_midas_module
+from nowcast_midas.midas import MIDAS
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.multi_midas import MultiMIDAS
+from nowcast_midas.specs import (
     ComboSpec,
     MidasSpec,
     MultiMidasSpec,
     OLSSpec,
     VariableSpec,
 )
-from sc_midas.utils import _build_quarterly_lag_matrix, sample_combo_data
+from nowcast_midas.utils import _build_quarterly_lag_matrix, sample_combo_data
 from tests.midas.sample_midas import sample_vintage_midas
 from tests.midas.sample_multi_midas import sample_multi_midas
 
@@ -1339,7 +1339,7 @@ class TestMultiMIDASRaggedEdge:
     def _true_weights(self):
         import jax.numpy as jnp
 
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         return np.asarray(get_weights("almon", jnp.array(self.THETA), self.N_LAGS))
 
@@ -1352,7 +1352,7 @@ class TestMultiMIDASRaggedEdge:
         """
         import pandas as pd
 
-        from sc_midas.utils import _build_lag_matrix
+        from nowcast_midas.utils import _build_lag_matrix
 
         n_lags = self.N_LAGS
         true_w = self._true_weights()
@@ -1400,7 +1400,7 @@ class TestMultiMIDASRaggedEdge:
         """
         import pandas as pd
 
-        from sc_midas.utils import _build_lag_matrix
+        from nowcast_midas.utils import _build_lag_matrix
 
         n_lags = self.N_LAGS
         true_w = self._true_weights()

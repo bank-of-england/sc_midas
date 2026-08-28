@@ -1,15 +1,15 @@
-from sc_midas import __all__ as root_all
-from sc_midas.combo_weights import __all__ as combo_weights_all
-from sc_midas.midas import __all__ as midas_all
-from sc_midas.midas_combo import __all__ as midas_combo_all
-from sc_midas.multi_midas import __all__ as multi_midas_all
-from sc_midas.ols import __all__ as ols_all
-from sc_midas.plots.midas import __all__ as midas_plots_all
-from sc_midas.plots.midas_combo import __all__ as combo_plots_all
-from sc_midas.plots.style import __all__ as style_all
-from sc_midas.specs import __all__ as specs_all
-from sc_midas.temporal_weights import __all__ as temporal_weights_all
-from sc_midas.utils import __all__ as utils_all
+from nowcast_midas import __all__ as root_all
+from nowcast_midas.combo_weights import __all__ as combo_weights_all
+from nowcast_midas.midas import __all__ as midas_all
+from nowcast_midas.midas_combo import __all__ as midas_combo_all
+from nowcast_midas.multi_midas import __all__ as multi_midas_all
+from nowcast_midas.ols import __all__ as ols_all
+from nowcast_midas.plots.midas import __all__ as midas_plots_all
+from nowcast_midas.plots.midas_combo import __all__ as combo_plots_all
+from nowcast_midas.plots.style import __all__ as style_all
+from nowcast_midas.specs import __all__ as specs_all
+from nowcast_midas.temporal_weights import __all__ as temporal_weights_all
+from nowcast_midas.utils import __all__ as utils_all
 
 
 def test_root_exports_only_user_facing_types():

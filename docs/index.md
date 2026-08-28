@@ -1,6 +1,6 @@
-# MA SC-MIDAS
+# nowcast-midas
 
-**Staggered-Combination MIDAS**: a Python implementation of for the staggered-combination MIDAS model.
+**Staggered-Combination MIDAS**: a Python implementation of the staggered-combination MIDAS model.
 
 The package combines:
 
@@ -38,7 +38,7 @@ addresses this with a two-layer combination:
 ## Quick start
 
 ```python
-from sc_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
 
 midas_monthly_1 = MidasSpec("monthly_1", method="almon", n_lags=5)
 midas_monthly_2 = MidasSpec("monthly_2", method="almon", n_lags=5)

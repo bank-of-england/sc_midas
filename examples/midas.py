@@ -1,10 +1,10 @@
 """Fit the core SC-MIDAS models with sampled mixed-frequency data."""
 
-from sc_midas.midas import MIDAS
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.multi_midas import MultiMIDAS
-from sc_midas.specs import ComboSpec, MidasSpec, OLSSpec, VariableSpec
-from sc_midas.utils import sample_combo_data
+from nowcast_midas.midas import MIDAS
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.multi_midas import MultiMIDAS
+from nowcast_midas.specs import ComboSpec, MidasSpec, OLSSpec, VariableSpec
+from nowcast_midas.utils import sample_combo_data
 
 
 def main() -> None:

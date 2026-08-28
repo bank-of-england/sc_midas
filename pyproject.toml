@@ -1,6 +1,6 @@
 [project]
-name = "sc_midas"
-version = "0.1.2"
+name = "nowcast-midas"
+version = "0.0.1"
 
 description = "Staggered-Combination MIDAS model"
 
@@ -15,7 +15,7 @@ maintainers = [
     {name="Paul Labonne", email="Paul.Labonne@bankofengland.co.uk"},
 ]
 
-license = "MIT"
+license = {text = "MIT"}
 
 readme = "README.md"
 
@@ -47,7 +47,7 @@ docs = [
 ]
 
 realtime = [
-    "forecast-realtime",
+    "forecast-realtime >= 0.5.3",
     "news_decomp >= 0.0.7",
 ]
 

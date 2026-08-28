@@ -7,8 +7,8 @@ models based on number of fitted observations.
 import numpy as np
 import pandas as pd
 
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.specs import ComboSpec, MidasSpec
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.specs import ComboSpec, MidasSpec
 
 
 def test_minimum_sample_size_in_nested_combo():

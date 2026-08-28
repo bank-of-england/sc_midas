@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from sc_midas.specs import VariableSpec
+from nowcast_midas.specs import VariableSpec
 
 
 @dataclass(frozen=True)

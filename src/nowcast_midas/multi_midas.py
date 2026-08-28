@@ -82,13 +82,13 @@ class MultiMIDAS:
     Extends MIDAS regression to multiple high-frequency (monthly)
     regressors.  Each regressor can use either a shared weighting method
     or its own per-variable specification via
-    :class:`~sc_midas.specs.VariableSpec`.
+    :class:`~nowcast_midas.specs.VariableSpec`.
 
     Parameters
     ----------
     variables : list[str | VariableSpec]
         Regressors to include.  Pass a plain string to use the shared
-        defaults; pass a :class:`~sc_midas.specs.VariableSpec` to
+        defaults; pass a :class:`~nowcast_midas.specs.VariableSpec` to
         override any parameter for that regressor.  Use
         ``VariableSpec(..., frequency='QE')`` for quarterly regressors.
     method : str

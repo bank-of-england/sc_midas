@@ -3,16 +3,13 @@
 
 1. **Fork and clone the repository**
 ```bash
-git clone https://github.com/bank-of-england/sc_midas.git
-cd sc_midas
+git clone https://github.com/bank-of-england/nowcast-midas.git
+cd nowcast_midas
 ```
 
-2. **Set up the development environment**
+2. **Install the package**
 ```bash
-conda create --name sc_midas
-conda activate sc_midas
-conda install pip
-pip install -e ".[dev, docs]"  # Install the package with development dependencies.
+pip install -e ".[dev, docs]"  # Install the package with development dependencies and in editable mode
 ```
 
 3. **Install pre-commit hooks**
@@ -24,7 +21,7 @@ Pre-commit runs the following checks when you commit changes:
 
 - Ruff's linter, with automatic fixes where possible
 - Ruff's formatter
-- API documentation generation from the public exports in `src/sc_midas`
+- API documentation generation from the public exports in `src/nowcast_midas`
 - NumPy-style docstring validation with `pydoclint`
 - The full pytest suite
 

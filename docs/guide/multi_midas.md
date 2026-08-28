@@ -1,6 +1,6 @@
 # Multi-regressor MIDAS
 
-The [`MultiMIDAS`](../api.md#sc_midas.multi_midas.MultiMIDAS) class
+The [`MultiMIDAS`](../api.md#nowcast_midas.multi_midas.MultiMIDAS) class
 extends the single-indicator MIDAS regression to **several
 high-frequency (monthly) regressors plus, optionally, quarterly
 regressors** that enter the model linearly.  Every regressor can keep
@@ -86,7 +86,7 @@ The simplest call shares the same weight scheme across all monthly
 indicators:
 
 ```python
-from sc_midas.multi_midas import MultiMIDAS
+from nowcast_midas.multi_midas import MultiMIDAS
 
 model = MultiMIDAS(
     variables=["monthly_1", "monthly_2"],
@@ -98,11 +98,11 @@ model.fit(target, regressors)
 ```
 
 For per-variable overrides — including mixing monthly and quarterly
-regressors — pass [`VariableSpec`](../api.md#sc_midas.specs.VariableSpec)
+regressors — pass [`VariableSpec`](../api.md#nowcast_midas.specs.VariableSpec)
 objects:
 
 ```python
-from sc_midas.specs import VariableSpec
+from nowcast_midas.specs import VariableSpec
 
 model = MultiMIDAS(
     variables=[
@@ -122,11 +122,11 @@ ignored for quarterly variables.
 ## Outputs
 
 After `fit`, results for each horizon are stored in `model.fits_[h]`
-([`FittedMultiMidas`](../api.md#sc_midas.multi_midas.FittedMultiMidas)):
+([`FittedMultiMidas`](../api.md#nowcast_midas.multi_midas.FittedMultiMidas)):
 
 * `alpha`, `gamma` (dummy coefficients), `phi` (AR coefficients).
 * `variable_fits[name]` →
-  [`VariableFit`](../api.md#sc_midas.multi_midas.VariableFit) with
+  [`VariableFit`](../api.md#nowcast_midas.multi_midas.VariableFit) with
     * `beta` — slope; estimated separately only for nonlinear methods
       (`exp_almon`, `beta`). It is fixed to $1.0$ for the
       linearly-estimated methods (`almon`, `unrestricted`) and for
@@ -167,13 +167,13 @@ dec = model.forecast_decomp(regressors)
 
 ## Pipeline integration
 
-Use [`MultiMidasSpec`](../api.md#sc_midas.specs.MultiMidasSpec) to embed
+Use [`MultiMidasSpec`](../api.md#nowcast_midas.specs.MultiMidasSpec) to embed
 a `MultiMIDAS` block as a single named source inside
-[`MidasCombo`](../api.md#sc_midas.midas_combo.MidasCombo):
+[`MidasCombo`](../api.md#nowcast_midas.midas_combo.MidasCombo):
 
 ```python
-from sc_midas.specs import MultiMidasSpec, ComboSpec
-from sc_midas.midas_combo import MidasCombo
+from nowcast_midas.specs import MultiMidasSpec, ComboSpec
+from nowcast_midas.midas_combo import MidasCombo
 
 multi_spec = MultiMidasSpec(
     name="multi_block",

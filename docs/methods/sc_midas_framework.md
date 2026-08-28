@@ -38,7 +38,7 @@ In both cases, the pipeline stores one model per horizon $h$ in
 ### 2. Layer 1 — soft combination
 
 The indicator fits feed into one or more first-layer
-[`ComboSpec`](../api.md#sc_midas.specs.ComboSpec) nodes whose
+[`ComboSpec`](../api.md#nowcast_midas.specs.ComboSpec) nodes whose
 combination weights are derived from rolling-window residuals.  Three
 inverse-error variants are available (mean absolute error, mean squared
 error, root mean squared error) plus equal-weight average.
@@ -68,7 +68,7 @@ on each date, with weights renormalised over those sources.
 
 The second layer pools the Layer-1 combo with a quarterly hard
 regressor via constrained regression
-([`fit_weights`](../api.md#sc_midas.combo_weights.fit_weights)) with
+([`fit_weights`](../api.md#nowcast_midas.combo_weights.fit_weights)) with
 `method='constrained_ls'`:
 
 $$
@@ -84,7 +84,7 @@ EViews-style convex combination $w \in [0, 1]$.
 ## End-to-end recipe
 
 ```python
-from sc_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
 
 midas_monthly_1 = MidasSpec("monthly_1", method="almon", n_lags=5)
 midas_monthly_2 = MidasSpec("monthly_2", method="almon", n_lags=5)

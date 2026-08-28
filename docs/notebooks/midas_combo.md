@@ -3,7 +3,7 @@
 
 Demonstrates the full workflow:
   1. Simulate quarterly target + monthly / quarterly indicators via
-     :func:`~sc_midas.utils.sample_combo_data` (with a one-off outlier).
+    :func:`~nowcast_midas.utils.sample_combo_data` (with a one-off outlier).
   2. Define ``MidasSpec`` (with optional period dummies) for the monthly
      indicators, and ``OLSSpec`` for the quarterly regressor.
   3. Build a two-level ``ComboSpec`` hierarchy:
@@ -15,7 +15,7 @@ Demonstrates the full workflow:
 """
 ```
 
-    'MIDAS combination pipeline example.\n\nDemonstrates the full workflow:\n  1. Simulate quarterly target + monthly / quarterly indicators via\n     :func:`~sc_midas.utils.sample_combo_data` (with a one-off outlier).\n  2. Define ``MidasSpec`` (with optional period dummies) for the monthly\n     indicators, and ``OLSSpec`` for the quarterly regressor.\n  3. Build a two-level ``ComboSpec`` hierarchy:\n        soft_combo  = MSE-weighted average of monthly indicators\n        final_combo = constrained regression of (soft_combo, hard).\n  4. Fit with ``MidasCombo``, generate out-of-sample forecasts via\n     ``model.forecast()``, and inspect ``fits_df_``, ``forecasts_df_``, and\n     ``combo_weights_``.\n'
+    'MIDAS combination pipeline example.\n\nDemonstrates the full workflow:\n  1. Simulate quarterly target + monthly / quarterly indicators via\n     :func:`~nowcast_midas.utils.sample_combo_data` (with a one-off outlier).\n  2. Define ``MidasSpec`` (with optional period dummies) for the monthly\n     indicators, and ``OLSSpec`` for the quarterly regressor.\n  3. Build a two-level ``ComboSpec`` hierarchy:\n        soft_combo  = MSE-weighted average of monthly indicators\n        final_combo = constrained regression of (soft_combo, hard).\n  4. Fit with ``MidasCombo``, generate out-of-sample forecasts via\n     ``model.forecast()``, and inspect ``fits_df_``, ``forecasts_df_``, and\n     ``combo_weights_``.\n'
 
 
 
@@ -24,9 +24,9 @@ Demonstrates the full workflow:
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.specs import ComboSpec, MidasSpec, OLSSpec
-from sc_midas.utils import sample_combo_data
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.specs import ComboSpec, MidasSpec, OLSSpec
+from nowcast_midas.utils import sample_combo_data
 ```
 
 
@@ -87,7 +87,7 @@ model.fit(target=target, regressors=regressors)
 
 
 
-    <sc_midas.midas_combo.MidasCombo at 0x1c7edf3b620>
+    <nowcast_midas.midas_combo.MidasCombo at 0x1c7edf3b620>
 
 
 

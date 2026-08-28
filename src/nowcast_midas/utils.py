@@ -115,7 +115,7 @@ def _build_lag_matrix(
     For each target date, selects the *n_lags* most recent monthly
     observations on or before that date.  Column 0 is the most recent
     lag (j = start_lag), consistent with the weight functions in
-    :mod:`~sc_midas.temporal_weights`.  Positions where a lag falls
+    :mod:`~nowcast_midas.temporal_weights`.  Positions where a lag falls
     before the start of the monthly series are filled with ``NaN``.
 
     Parameters
@@ -324,7 +324,7 @@ def sample_data(
     method : str
         Weighting scheme used to generate the true weights
         (default ``'exp_almon'``).  Any scheme accepted by
-        :func:`~sc_midas.temporal_weights.get_weights` is valid.
+        :func:`~nowcast_midas.temporal_weights.get_weights` is valid.
     theta_true : list[float] | np.ndarray | None
         Weight-shape parameters.  When ``None`` (default), uses
         ``[-0.5, -0.1]``.
@@ -353,7 +353,7 @@ def sample_data(
     Examples
     --------
     >>> target, regressors = sample_data(n_obs=100, n_lags=6, seed=0)
-    >>> from sc_midas.midas import MIDAS
+    >>> from nowcast_midas.midas import MIDAS
     >>> m = MIDAS(n_lags=6).fit(target, regressors)
     """
     from .temporal_weights import get_weights
@@ -467,7 +467,7 @@ def sample_combo_data(
     outlier_date: str | pd.Timestamp | None = "2020-06-30",
     outlier_size: float = -25.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    """Generate sample data for the :class:`~sc_midas.midas_combo.MidasCombo` pipeline.
+    """Generate sample data for the :class:`~nowcast_midas.midas_combo.MidasCombo` pipeline.
 
     Each monthly indicator ``v`` is drawn iid ``N(0, 1)`` and enters the
     target through its own MIDAS DGP; each quarterly indicator ``z``
@@ -483,7 +483,7 @@ def sample_combo_data(
             \\quad \\varepsilon \\sim N(0, \\text{noise}^2),
 
     where the lag weights ``w`` come from
-    :func:`~sc_midas.temporal_weights.get_weights` with shape parameters
+    :func:`~nowcast_midas.temporal_weights.get_weights` with shape parameters
     ``theta_true`` (default ``[-0.5, -0.1]``).
 
     Parameters
@@ -516,7 +516,7 @@ def sample_combo_data(
     method : str
         Weighting scheme used to generate the true weights.
     theta_true : list[float] | np.ndarray | None
-        Forwarded to :func:`~sc_midas.temporal_weights.get_weights` to
+        Forwarded to :func:`~nowcast_midas.temporal_weights.get_weights` to
         produce the true monthly lag weights.
     horizon : int
         Forecast lead used to generate the relationship

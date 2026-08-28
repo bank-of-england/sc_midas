@@ -1,11 +1,11 @@
 # The SC-MIDAS pipeline
 
-[`MidasCombo`](../api.md#sc_midas.midas_combo.MidasCombo) is the
+[`MidasCombo`](../api.md#nowcast_midas.midas_combo.MidasCombo) is the
 high-level orchestrator: it fits one
-[`MIDAS`](../api.md#sc_midas.midas.MIDAS) per monthly indicator, one
-[`OLS`](../api.md#sc_midas.ols.OLS) per quarterly regressor, and pools
+[`MIDAS`](../api.md#nowcast_midas.midas.MIDAS) per monthly indicator, one
+[`OLS`](../api.md#nowcast_midas.ols.OLS) per quarterly regressor, and pools
 their forecasts through a tree of
-[`ComboSpec`](../api.md#sc_midas.specs.ComboSpec) nodes — across all
+[`ComboSpec`](../api.md#nowcast_midas.specs.ComboSpec) nodes — across all
 horizons in one call.
 
 ## Input data
@@ -31,7 +31,7 @@ Both `target` and `regressors` are **long-format** DataFrames:
 ### `MidasSpec` — one per monthly indicator
 
 ```python
-from sc_midas import MidasSpec
+from nowcast_midas import MidasSpec
 
 MidasSpec(
     variable="monthly_1",
@@ -52,7 +52,7 @@ All `MidasSpec` arguments map one-for-one to the corresponding
 ### `OLSSpec` — one per quarterly regressor
 
 ```python
-from sc_midas import OLSSpec
+from nowcast_midas import OLSSpec
 
 OLSSpec(
     variable="quarterly_1",
@@ -77,7 +77,7 @@ $$
 ### `ComboSpec` — the combination tree
 
 ```python
-from sc_midas import ComboSpec
+from nowcast_midas import ComboSpec
 
 soft = ComboSpec(
     name="soft",
@@ -115,7 +115,7 @@ Combination methods are detailed on the
 ## Fitting
 
 ```python
-from sc_midas import MidasCombo
+from nowcast_midas import MidasCombo
 
 model = MidasCombo(
     combo_specs=final,
@@ -238,7 +238,7 @@ All three return `(fig, ax)` so you can customise or save the figure.
 ## End-to-end example
 
 ```python
-from sc_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
 
 midas_monthly_1 = MidasSpec("monthly_1", method="almon", n_lags=5)
 midas_monthly_2 = MidasSpec("monthly_2", method="almon", n_lags=5)

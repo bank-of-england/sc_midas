@@ -116,7 +116,7 @@ $$
    \sum_{s=t-W+1}^{t}\bigl( y_s - \mathbf w^{\!\top} \hat{\mathbf y}_s\bigr)^2.
 $$
 
-Solved by [`constrained_least_squares`](../api.md#sc_midas.combo_weights.constrained_least_squares)
+Solved by [`constrained_least_squares`](../api.md#nowcast_midas.combo_weights.constrained_least_squares)
 (the `estimator="constrained_ls"` default): Levenberg-Marquardt on a
 softmax reparameterization $\mathbf w = \mathrm{softmax}(\mathbf z)$ with
 an analytical Jacobian, so the constraints hold by construction.  With
@@ -125,7 +125,7 @@ $w_1 \in [0, 1]$, $w_2 = 1 - w_1$, matching the EViews soft-vs-hard
 merge equation.
 
 Passing `estimator="clipped_ols"` instead uses
-[`clipped_ols`](../api.md#sc_midas.combo_weights.clipped_ols): plain OLS,
+[`clipped_ols`](../api.md#nowcast_midas.combo_weights.clipped_ols): plain OLS,
 weights clipped to $[0, 1]$ and renormalized to sum to one. This method
 avoids iterative optimisation, which makes it faster but less stable on
 ill-conditioned designs.

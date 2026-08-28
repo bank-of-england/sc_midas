@@ -28,7 +28,7 @@ import pandas as pd
 import forecast_evaluation as fe
 import forecast_realtime as rt
 import news_decomp as nd
-from sc_midas.utils import sample_combo_data
+from nowcast_midas.utils import sample_combo_data
 
 target, regressors, _ = sample_combo_data(
     n_quarters=60,

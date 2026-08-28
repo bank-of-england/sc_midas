@@ -1,7 +1,7 @@
 # The MIDAS model
 
 This page covers the single-indicator
-[`MIDAS`](../api.md#sc_midas.midas.MIDAS) class: how to specify it,
+[`MIDAS`](../api.md#nowcast_midas.midas.MIDAS) class: how to specify it,
 estimate it (OLS vs NLS), add AR lags and outlier dummies, fit multiple
 horizons in one call, and produce out-of-sample forecasts.
 
@@ -40,7 +40,7 @@ have exactly the columns `date` and `value`.
 ## Specifying the model
 
 ```python
-from sc_midas.midas import MIDAS
+from nowcast_midas.midas import MIDAS
 
 model = MIDAS(
     method="almon",  # 'almon', 'exp_almon', 'beta', 'unrestricted'
@@ -210,7 +210,7 @@ generating parameters and produce essentially zero residuals when
 `noise=0`. The package's exact-recovery tests rely on this.
 
 ```python
-from sc_midas.utils import sample_data
+from nowcast_midas.utils import sample_data
 
 target, regressors = sample_data(
     n_obs=200,

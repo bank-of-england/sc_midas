@@ -1,4 +1,4 @@
-"""Tests for :class:`~sc_midas.midas_combo.MidasCombo`.
+"""Tests for :class:`~nowcast_midas.midas_combo.MidasCombo`.
 
 Coverage:
 
@@ -18,12 +18,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sc_midas.midas import MIDAS
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.multi_midas import MultiMIDAS
-from sc_midas.ols import OLS
-from sc_midas.specs import ComboSpec, MidasSpec, MultiMidasSpec, OLSSpec
-from sc_midas.utils import sample_combo_data
+from nowcast_midas.midas import MIDAS
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.multi_midas import MultiMIDAS
+from nowcast_midas.ols import OLS
+from nowcast_midas.specs import ComboSpec, MidasSpec, MultiMidasSpec, OLSSpec
+from nowcast_midas.utils import sample_combo_data
 from tests.midas.sample_midas import sample_midas
 from tests.midas.sample_midas_combo import sample_midas_combo, sample_mixed_model_combo
 from tests.midas.sample_multi_midas import sample_multi_midas

@@ -1,6 +1,8 @@
 # Staggered-Combination MIDAS
 Mixed-frequency nowcasting and short-horizon forecasting of quarterly targets (e.g. GDP) from monthly indicators, with forecast combination.
 
+Experimental Python implementation of [Moreira (2025)](https://www.bankofengland.co.uk/macro-technical-paper/2025/nowcasting-gdp-at-the-bank-of-england-a-staggered-combination-midas-approach)
+
 Read the [user manual](docs/index.md) for the full guide.
 
 ## Features
@@ -18,7 +20,7 @@ Read the [user manual](docs/index.md) for the full guide.
 
 ## Project Structure
 
-    ├── src/sc_midas/    # Source code
+    ├── src/nowcast_midas/    # Source code
     ├── docs/            # Zensical documentation site
     ├── examples/        # Example scripts
     ├── tests/midas/     # Unit tests
@@ -35,8 +37,8 @@ Python ≥ 3.10.
 
 ## Quick start
 ```python
-from sc_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
-from sc_midas.utils import sample_combo_data
+from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas.utils import sample_combo_data
 
 # Simulated data: three monthly series, one quarterly regressor, and a quarterly target.
 target, regressors, info = sample_combo_data(n_quarters=60, seed=42)
@@ -93,3 +95,6 @@ print(model.summary(horizon=0))
 * [Moreira (2025)](https://www.bankofengland.co.uk/macro-technical-paper/2025/nowcasting-gdp-at-the-bank-of-england-a-staggered-combination-midas-approach)
 * [Ghysels, Santa-Clara and Valkanov (2004)](https://escholarship.org/uc/item/9mf223rs)
 * [Ghysels, Sinko and Valkanov (2007)](https://doi.org/10.1080/07474930600972186)
+
+## Data Classification
+Bank of England Data Classification: OFFICIAL BLUE

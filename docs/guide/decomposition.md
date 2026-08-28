@@ -1,12 +1,12 @@
 # Interpreting the decomposition dataset
 
-Every `sc_midas` model can decompose a forecast into additive components.
+Every `nowcast_midas` model can decompose a forecast into additive components.
 `MIDAS`, `OLS`, `MultiMIDAS`, and `MidasCombo` each expose a `forecast_decomp()` method that
 returns a **long-format** table where **one row = one additive component** of a
 single horizon's forecast.
 
 The examples below use the sampled data returned by
-`sc_midas.utils.sample_combo_data()` and the
+`nowcast_midas.utils.sample_combo_data()` and the
 `MidasCombo.forecast_decomp()` method. A real-time integration can enrich the
 same rows with vintage and revision metadata.
 

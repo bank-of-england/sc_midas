@@ -4,15 +4,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sc_midas.combo_weights import (
+from nowcast_midas.combo_weights import (
     _filter_sources,
     clipped_ols,
     constrained_least_squares,
     fit_average,
     fit_weights,
 )
-from sc_midas.midas_combo import MidasCombo
-from sc_midas.specs import ComboSpec, MidasSpec
+from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas.specs import ComboSpec, MidasSpec
 
 # ======================================================================
 #  Fixtures

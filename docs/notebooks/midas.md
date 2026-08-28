@@ -19,8 +19,8 @@ The model uses the same lags, AR terms, and outlier dummy for estimation.
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from sc_midas.midas import MIDAS
-from sc_midas.utils import sample_data
+from nowcast_midas.midas import MIDAS
+from nowcast_midas.utils import sample_data
 ```
 
 
@@ -64,7 +64,7 @@ model.fit(target_train, regressors_train)
 
 
 
-    <sc_midas.midas.MIDAS at 0x1bec29e74d0>
+    <nowcast_midas.midas.MIDAS at 0x1bec29e74d0>
 
 
 

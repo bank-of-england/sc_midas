@@ -17,7 +17,7 @@ __all__ = [
 
 @dataclass
 class VariableSpec:
-    """Per-variable specification for a :class:`~sc_midas.multi_midas.MultiMIDAS` model.
+    """Per-variable specification for a :class:`~nowcast_midas.multi_midas.MultiMIDAS` model.
 
     Parameters
     ----------
@@ -153,10 +153,10 @@ class MidasSpec:
 @dataclass
 class MultiMidasSpec:
     """Specification for a multi-regressor MIDAS model inside a
-    :class:`~sc_midas.midas_combo.MidasCombo` pipeline.
+    :class:`~nowcast_midas.midas_combo.MidasCombo` pipeline.
 
     The fitted values produced by the underlying
-    :class:`~sc_midas.multi_midas.MultiMIDAS` model are exposed to
+    :class:`~nowcast_midas.multi_midas.MultiMIDAS` model are exposed to
     :class:`ComboSpec` nodes under :attr:`name`.
 
     Parameters

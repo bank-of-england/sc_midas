@@ -9,9 +9,9 @@ import pandas as pd
 matplotlib.use("Agg")  # non-interactive backend for testing
 import pytest
 
-from sc_midas.midas import MIDAS, FittedMidas
-from sc_midas.temporal_weights import almon, beta, exp_almon
-from sc_midas.utils import _build_lag_matrix, sample_data
+from nowcast_midas.midas import MIDAS, FittedMidas
+from nowcast_midas.temporal_weights import almon, beta, exp_almon
+from nowcast_midas.utils import _build_lag_matrix, sample_data
 
 RNG = np.random.default_rng(42)
 T, K = 1_000, 6
@@ -301,7 +301,7 @@ class TestMIDASForecast:
         DGP is built from the ragged lag matrix so the noiseless
         forecast should still match the held-out actual exactly.
         """
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         n_obs, alpha, beta_ = 200, 2.0, 1.0
         theta = [-0.5, -0.1]
@@ -341,7 +341,7 @@ class TestMIDASForecast:
         DGP is built from the ragged lag matrix so the noiseless
         forecast should still match the held-out actual exactly.
         """
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         H = 4
         n_obs, alpha, beta_ = 200, 2.0, 1.0
@@ -575,7 +575,7 @@ class TestMIDASFitRecovery:
         m = MIDAS(method=method, n_lags=K, horizons=[0], estimator=estimator).fit(
             target, regressors
         )
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         true_w = np.asarray(get_weights(method, np.array(theta), K))
         np.testing.assert_allclose(m.fits_[0].weights, true_w, atol=self.ATOL)
@@ -615,7 +615,7 @@ class TestMIDASDummy:
 
     def test_dummy_recovers_dgp_ols(self):
         """OLS with dummies recovers alpha, weights, and gamma almost exactly."""
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         theta = [1.0, -0.2]
         target, regressors = self._make_data_with_outliers(
@@ -650,7 +650,7 @@ class TestMIDASDummy:
 
     def test_dummy_recovers_dgp_nls(self):
         """NLS with dummies recovers alpha, beta, weights, and gamma."""
-        from sc_midas.temporal_weights import get_weights
+        from nowcast_midas.temporal_weights import get_weights
 
         theta = [-0.5, -0.1]
         target, regressors = self._make_data_with_outliers(

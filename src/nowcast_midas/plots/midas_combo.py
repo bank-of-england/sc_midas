@@ -1,4 +1,4 @@
-"""Plotting methods for :class:`~sc_midas.midas_combo.MidasCombo`."""
+"""Plotting methods for :class:`~nowcast_midas.midas_combo.MidasCombo`."""
 
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ class _ComboPlots:
         Parameters
         ----------
         combo_names : str | list[str] | None
-            Name(s) of :class:`~sc_midas.specs.ComboSpec` to plot.  When
+            Name(s) of :class:`~nowcast_midas.specs.ComboSpec` to plot.  When
             both *combo_names* and *indicator_names* are ``None`` (default),
             the root combo spec is used.
         indicator_names : str | list[str] | None
@@ -280,7 +280,7 @@ class _ComboPlots:
         Parameters
         ----------
         combo_name : str | None
-            Name of the :class:`~sc_midas.specs.ComboSpec` to plot.
+            Name of the :class:`~nowcast_midas.specs.ComboSpec` to plot.
             Defaults to the root combo spec.
         horizon : int | None
             Horizon to plot.  When ``None`` (default) all horizons are
@@ -480,7 +480,7 @@ class _ComboPlots:
         Parameters
         ----------
         combo_names : str | list[str] | None
-            Name(s) of :class:`~sc_midas.specs.ComboSpec` to plot.  When
+            Name(s) of :class:`~nowcast_midas.specs.ComboSpec` to plot.  When
             both *combo_names* and *indicator_names* are ``None`` (default),
             the root combo spec is used.  Combos are shown with a solid line
             for the in-sample fit and a dashed line for the OOS forecast.

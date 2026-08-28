@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sc_midas.ols import OLS, FittedOLS
+from nowcast_midas.ols import OLS, FittedOLS
 
 ATOL = 0.05
 

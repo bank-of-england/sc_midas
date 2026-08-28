@@ -11,7 +11,7 @@ import forecast_realtime as rt
 import news_decomp as nd
 import pandas as pd
 
-from sc_midas.utils import sample_combo_data
+from nowcast_midas.utils import sample_combo_data
 
 
 def main() -> None:

@@ -1,11 +1,11 @@
 name: Package quality
 
-# Run quality checks for pull requests, changes pushed to main, or a manual run.
+# Run quality checks for pull requests, branch pushes, or a manual run.
 on:
   pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches: ["**"]
+    tags-ignore: ["**"]
   workflow_dispatch:
   workflow_call:
     inputs:

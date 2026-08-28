@@ -3,7 +3,7 @@
 # ============================================================================
 
 [project]
-site_name  = "SC-MIDAS"
+site_name  = "Nowcast-MIDAS"
 site_description = "Staggered‑Combination MIDAS model"
 copyright = "Copyright &copy; Bank of England"
 

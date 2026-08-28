@@ -1,4 +1,4 @@
-"""Plotting methods for :class:`~sc_midas.midas.MIDAS`."""
+"""Plotting methods for :class:`~nowcast_midas.midas.MIDAS`."""
 
 import matplotlib.pyplot as plt
 import numpy as np

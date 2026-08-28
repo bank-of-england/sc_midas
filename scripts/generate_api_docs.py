@@ -2,37 +2,41 @@ import ast
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_ROOT = PROJECT_ROOT / "src" / "sc_midas"
+PACKAGE_ROOT = PROJECT_ROOT / "src" / "nowcast_midas"
 API_DOC = PROJECT_ROOT / "docs" / "api.md"
 PUBLIC_MODULES = (
-    ("High-level Pipeline", "sc_midas.midas_combo", PACKAGE_ROOT / "midas_combo.py"),
+    (
+        "High-level Pipeline",
+        "nowcast_midas.midas_combo",
+        PACKAGE_ROOT / "midas_combo.py",
+    ),
     (
         "MIDAS Regression (single indicator)",
-        "sc_midas.midas",
+        "nowcast_midas.midas",
         PACKAGE_ROOT / "midas.py",
     ),
     (
         "Quarterly OLS (single regressor)",
-        "sc_midas.ols",
+        "nowcast_midas.ols",
         PACKAGE_ROOT / "ols.py",
     ),
     (
         "Multi-Regressor MIDAS",
-        "sc_midas.multi_midas",
+        "nowcast_midas.multi_midas",
         PACKAGE_ROOT / "multi_midas.py",
     ),
-    ("Specifications", "sc_midas.specs", PACKAGE_ROOT / "specs.py"),
+    ("Specifications", "nowcast_midas.specs", PACKAGE_ROOT / "specs.py"),
     (
         "Weighting Schemes",
-        "sc_midas.temporal_weights",
+        "nowcast_midas.temporal_weights",
         PACKAGE_ROOT / "temporal_weights.py",
     ),
     (
         "Combination Weights",
-        "sc_midas.combo_weights",
+        "nowcast_midas.combo_weights",
         PACKAGE_ROOT / "combo_weights.py",
     ),
-    ("Example Data", "sc_midas.utils", PACKAGE_ROOT / "utils.py"),
+    ("Example Data", "nowcast_midas.utils", PACKAGE_ROOT / "utils.py"),
 )
 
 
@@ -67,7 +71,7 @@ def public_objects() -> list[tuple[str, list[str]]]:
     missing_root_exports = root_exports - declared_exports
     if missing_root_exports:
         raise ValueError(
-            "sc_midas.__all__ contains names missing from public module __all__ "
+            "nowcast_midas.__all__ contains names missing from public module __all__ "
             f"declarations: {sorted(missing_root_exports)}"
         )
     return [
@@ -82,7 +86,7 @@ def render_api_page(sections: list[tuple[str, list[str]]]) -> str:
         "# API Reference",
         "",
         (
-            "This script writes the API manifest for the public sc_midas API. "
+            "This script writes the API manifest for the public nowcast_midas API. "
             "Zensical renders the API content from the current source."
         ),
         "",

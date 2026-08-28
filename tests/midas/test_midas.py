@@ -1,12 +1,12 @@
-"""Independent real time validation tests for :class:`sc_midas.MIDAS`."""
+"""Independent real time validation tests for :class:`nowcast_midas.MIDAS`."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
-import sc_midas.midas as midas_module
-from sc_midas import temporal_weights
-from sc_midas.midas import MIDAS
+import nowcast_midas.midas as midas_module
+from nowcast_midas import temporal_weights
+from nowcast_midas.midas import MIDAS
 from tests.midas.sample_midas import (
     _beta_weights,
     sample_midas,
