@@ -29,7 +29,7 @@ nav = [
   ]},
 
   { "API Reference" = "api.md" },
-  { "Contributing" = "../CONTRIBUTING.md" },
+  { "Contributing" = "https://github.com/bank-of-england/nowcast-midas/blob/main/CONTRIBUTING.md" },
 ]
 
 # KaTeX math rendering
