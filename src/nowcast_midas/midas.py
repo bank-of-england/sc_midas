@@ -42,10 +42,14 @@ class MIDAS(_MIDASPlots):
         ``'ols'`` or ``'nls'``.  Defaults to ``'ols'`` for
         unrestricted/almon, ``'nls'`` otherwise.
     horizons : list[int] | None
-        Horizons for multi-step forecasting (default None, i.e. no multi-step forecasts).
-        The MIDAS model uses a direct forecasting approach,
-        so each horizon is estimated as a separate model with the target variable
-        shifted accordingly y[t+h] ~ X[t]  (direct h-step forecasting).
+        Explicit list of forecast horizons to fit, e.g. ``[0, 1, 4]``.
+        ``None`` (default) is treated as ``[0]``, i.e. nowcast only / no
+        multi-step forecasts.  This is a *list of horizon indices*, unlike
+        ``MidasCombo(horizons: int)``, which is a *count* of application
+        forecast steps.  The MIDAS model uses a direct forecasting approach,
+        so each horizon is estimated as a separate model with the target
+        variable shifted accordingly y[t+h] ~ X[t]  (direct h-step
+        forecasting).
     start_lag : int
         Index of the first high-frequency lag to include (default 0).
     n_ar_lags : int
@@ -107,6 +111,8 @@ class MIDAS(_MIDASPlots):
         # Populated by fit() — one FittedMidas per horizon
         self.fits_: dict[int, FittedMidas] = {}
         self.fits_df_: pd.DataFrame | None = None
+        # Indicator name reported in the ``spec`` column of ``forecast()``.
+        self._variable_name: str = "target"
 
         # Populated by forecast() (DataFrame, multi-horizon)
         self.forecasts_df_: pd.DataFrame | None = None
@@ -122,11 +128,13 @@ class MIDAS(_MIDASPlots):
         Parameters
         ----------
         target : pd.DataFrame
-            Low-frequency target with at least ``date`` and ``value``
-            columns.
+            Low-frequency target with (at least) ``date`` and ``value``
+            columns.  Column order does not matter and extra columns are
+            ignored.
         regressors : pd.DataFrame
-            High-frequency (monthly) regressor with at least ``date``
-            and ``value`` columns for a single indicator variable.
+            High-frequency (monthly) regressor for a single indicator, with
+            (at least) ``date`` and ``value`` columns.  Column order does not
+            matter and extra columns are ignored.
 
         Returns
         -------
@@ -135,17 +143,24 @@ class MIDAS(_MIDASPlots):
         Raises
         ------
         ValueError
-            If either input has invalid columns, missing target values, or
-            an unsupported horizon.
+            If either input is missing a required column, the target has
+            missing values, or a horizon is unsupported.
         """
 
-        if ["date", "value"] != list(target.columns):
+        if not {"date", "value"}.issubset(target.columns):
             raise ValueError("target DataFrame must have 'date' and 'value' columns.")
 
-        if ["date", "value"] != list(regressors.columns):
+        if not {"date", "value"}.issubset(regressors.columns):
             raise ValueError(
                 "regressors DataFrame must have 'date' and 'value' columns."
             )
+
+        # Name used in the ``spec`` column of ``forecast()``.  Taken from the
+        # regressor ``variable`` column when present, else ``"target"``.
+        if "variable" in regressors.columns and regressors["variable"].notna().any():
+            self._variable_name = str(regressors["variable"].iloc[0])
+        else:
+            self._variable_name = "target"
 
         target = target.sort_values("date")
         regressors = regressors.sort_values("date")
@@ -287,9 +302,9 @@ class MIDAS(_MIDASPlots):
             nobs=T,
             y=y,
             X=X,
+            gamma=gamma,
+            phi=phi,
         )
-        fit.gamma = gamma
-        fit.phi = phi
         return fit
 
     def _fit_ols(self, y: np.ndarray, X: np.ndarray, D=None, Y_ar=None) -> tuple:
@@ -420,7 +435,7 @@ class MIDAS(_MIDASPlots):
         (trailing rows with missing values do not advance the information
         date).  The fitted relation is ``y[t+h] ~ X[t]``.  Evaluating
         the horizon-``h`` model on ``X`` at ``T_X`` therefore forecasts the
-        target ``h`` periods after ``T_X``::
+        target ``h`` periods after ``T_X``:
 
             forecast_date(h) = T_X + h    (in quarters)
 
@@ -438,7 +453,10 @@ class MIDAS(_MIDASPlots):
         Returns
         -------
         pd.DataFrame
-            One forecast row per fitted horizon.
+            Long-format forecasts with columns ``date``, ``horizon``,
+            ``spec``, ``value`` — one row per fitted horizon.  ``spec`` is
+            the indicator name (the regressor ``variable`` value, else
+            ``"target"``).
 
         Raises
         ------
@@ -478,7 +496,7 @@ class MIDAS(_MIDASPlots):
                 forecast_val += float(x_row[0] @ w)
 
             # Add dummy contribution if model was fitted with dummies.
-            gamma = getattr(fit, "gamma", np.array([]))
+            gamma = fit.gamma
             if len(gamma) > 0 and self.dummy_periods is not None:
                 d_row = _build_dummy_matrix(
                     forecast_date,
@@ -487,7 +505,7 @@ class MIDAS(_MIDASPlots):
                 forecast_val += float(d_row[0] @ gamma)
 
             # Add AR contribution.
-            phi = getattr(fit, "phi", np.array([]))
+            phi = fit.phi
             if len(phi) > 0:
                 if np.any(np.isnan(y_ar)):
                     forecast_val = np.nan
@@ -495,9 +513,18 @@ class MIDAS(_MIDASPlots):
                     forecast_val += float(y_ar @ phi)
 
             # store
-            rows.append({"horizon": h, "date": forecast_date, "forecast": forecast_val})
+            rows.append(
+                {
+                    "date": forecast_date,
+                    "horizon": h,
+                    "spec": self._variable_name,
+                    "value": forecast_val,
+                }
+            )
 
-        self.forecasts_df_ = pd.DataFrame(rows)
+        self.forecasts_df_ = pd.DataFrame(
+            rows, columns=["date", "horizon", "spec", "value"]
+        )
         return self.forecasts_df_
 
     # -- Forecast decomposition -------------------------------------------------
@@ -510,7 +537,7 @@ class MIDAS(_MIDASPlots):
         """Additive component decomposition of each out-of-sample forecast.
 
         Splits every horizon's point forecast into additive components that
-        sum back to the forecast value produced by :meth:`forecast`::
+        sum back to the forecast value produced by `forecast()`:
 
             forecast[h] = intercept + MIDAS-block + dummies + AR-lags
 
@@ -523,7 +550,7 @@ class MIDAS(_MIDASPlots):
         ----------
         regressors_forecast : pd.DataFrame
             Monthly regressor data with ``date`` and ``value`` columns
-            (same input as :meth:`forecast`).
+            (same input as `forecast()`).
         regressor_name : str
             Component label for the MIDAS regressor block (default ``"X"``).
 
@@ -564,7 +591,7 @@ class MIDAS(_MIDASPlots):
         base_period = forecast_origin.to_period("Q")
         for h, fit in sorted(self.fits_.items()):
             forecast_date = (base_period + h).end_time.normalize()
-            phi = getattr(fit, "phi", np.array([]))
+            phi = fit.phi
 
             # If the AR block is required but unavailable, forecast() returns
             # NaN for this horizon; emit no decomposition rows for it.
@@ -595,7 +622,7 @@ class MIDAS(_MIDASPlots):
                 )
 
             # Dummy components (one per active dummy).
-            gamma = getattr(fit, "gamma", np.array([]))
+            gamma = fit.gamma
             if len(gamma) > 0 and self.dummy_periods is not None:
                 d_row = _build_dummy_matrix(
                     forecast_date, dummy_quarters=self.dummy_periods
@@ -633,14 +660,19 @@ class MIDAS(_MIDASPlots):
 
     # -- Summary ----------------------------------------------------------------
 
-    def summary(self, horizon: int | None = None) -> None:
-        """Print a formatted text summary of the fitted model.
+    def summary(self, horizon: int | None = None) -> str:
+        """Print a formatted text summary of the fitted model and return it.
 
         Parameters
         ----------
         horizon : int | None
             Which horizon to summarise.  When ``None`` (default) all
             fitted horizons are printed in sequence.
+
+        Returns
+        -------
+        str
+            The formatted summary text (also printed to stdout).
 
         Raises
         ------
@@ -651,11 +683,12 @@ class MIDAS(_MIDASPlots):
             raise RuntimeError("Not fitted. Call fit() first.")
 
         horizons = [horizon] if horizon is not None else sorted(self.fits_.keys())
-        for h in horizons:
-            self._summary_single(h)
+        text = "\n".join(self._summary_single(h) for h in horizons)
+        print(text)
+        return text
 
-    def _summary_single(self, horizon: int) -> None:
-        """Print summary for a single horizon."""
+    def _summary_single(self, horizon: int) -> str:
+        """Build the summary text for a single horizon."""
         fit = self.fits_[horizon]
         sse = float(fit.residuals @ fit.residuals)
         rmse = float(np.sqrt(sse / fit.nobs))
@@ -685,17 +718,15 @@ class MIDAS(_MIDASPlots):
         for i, w in enumerate(fit.weights):
             lines.append(f"  w[{i:2d}]    = {w: .6f}")
 
-        gamma = getattr(fit, "gamma", np.array([]))
-        for i, g in enumerate(gamma):
+        for i, g in enumerate(fit.gamma):
             lines.append(f"  gamma[{i}] = {g: .6f}")
 
-        phi = getattr(fit, "phi", np.array([]))
-        for i, p in enumerate(phi):
+        for i, p in enumerate(fit.phi):
             lines.append(f"  phi[{i + 1}]   = {p: .6f}")
 
         lines.extend([thin, f"  SSE  : {sse: .6f}", f"  RMSE : {rmse: .6f}", sep])
 
-        print("\n".join(lines))
+        return "\n".join(lines)
 
 
 @dataclass
@@ -728,6 +759,10 @@ class FittedMidas:
     dates : np.ndarray | None
         Low-frequency target dates aligned to the fitted sample.
         Populated by ``fit()``; equivalent to ``fitted_values.index``.
+    gamma : np.ndarray
+        Estimated outlier-dummy coefficients (empty when no ``dummy_periods``).
+    phi : np.ndarray
+        Estimated autoregressive coefficients (empty when ``n_ar_lags == 0``).
     """
 
     alpha: float = 0.0
@@ -741,3 +776,5 @@ class FittedMidas:
     y: np.ndarray = field(default_factory=lambda: np.array([]))
     X: np.ndarray = field(default_factory=lambda: np.empty((0, 0)))
     dates: np.ndarray | None = None
+    gamma: np.ndarray = field(default_factory=lambda: np.array([]))
+    phi: np.ndarray = field(default_factory=lambda: np.array([]))

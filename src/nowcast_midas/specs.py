@@ -17,7 +17,7 @@ __all__ = [
 
 @dataclass
 class VariableSpec:
-    """Per-variable specification for a :class:`~nowcast_midas.multi_midas.MultiMIDAS` model.
+    """Per-variable specification for a `MultiMIDAS` model.
 
     Parameters
     ----------
@@ -153,20 +153,20 @@ class MidasSpec:
 @dataclass
 class MultiMidasSpec:
     """Specification for a multi-regressor MIDAS model inside a
-    :class:`~nowcast_midas.midas_combo.MidasCombo` pipeline.
+    `MidasCombo` pipeline.
 
     The fitted values produced by the underlying
-    :class:`~nowcast_midas.multi_midas.MultiMIDAS` model are exposed to
-    :class:`ComboSpec` nodes under :attr:`name`.
+    `MultiMIDAS` model are exposed to
+    `ComboSpec` nodes under `name`.
 
     Parameters
     ----------
     name : str
         Unique identifier for this model within the pipeline (used as
-        the source name in :class:`ComboSpec`).
+        the source name in `ComboSpec`).
     variables : list of str or VariableSpec
         Regressors to include.  Plain strings use the shared defaults;
-        :class:`VariableSpec` instances override per-variable settings.
+        `VariableSpec` instances override per-variable settings.
     method : str
         Shared weighting scheme for variables given as plain strings
         (default ``'almon'``).
@@ -245,8 +245,8 @@ class OLSSpec:
 
     Used for low-frequency indicators that share the target's frequency
     (quarterly) and therefore need plain OLS rather than mixed-frequency
-    weighting.  Fitted values are made available to :class:`ComboSpec`
-    nodes under ``variable`` exactly like a :class:`MidasSpec`.
+    weighting.  Fitted values are made available to `ComboSpec`
+    nodes under ``variable`` exactly like a `MidasSpec`.
 
     Parameters
     ----------
@@ -322,9 +322,9 @@ class ComboSpec:
 
                 * a string — the variable or combination name declared elsewhere in
                     the pipeline,
-                * a :class:`MidasSpec`, :class:`OLSSpec`, or :class:`MultiMidasSpec` —
+                * a `MidasSpec`, `OLSSpec`, or `MultiMidasSpec` —
                     an indicator model that the pipeline registers automatically,
-                * a nested :class:`ComboSpec` — a combination of combinations.
+                * a nested `ComboSpec` — a combination of combinations.
     method : str
         Combination method: ``'average'``, ``'rmse'``, ``'mse'``,
         ``'mae'``, or ``'regression'`` (default ``'average'``).
@@ -469,8 +469,8 @@ class ComboSpec:
     def collect_indicators(
         self,
     ) -> tuple[list[MidasSpec], list[OLSSpec], list[MultiMidasSpec]]:
-        """Return all :class:`MidasSpec`, :class:`OLSSpec` and
-        :class:`MultiMidasSpec` instances referenced anywhere in the
+        """Return all `MidasSpec`, `OLSSpec` and
+        `MultiMidasSpec` instances referenced anywhere in the
         combination tree, deduplicated by variable / name (first
         occurrence wins).
         """

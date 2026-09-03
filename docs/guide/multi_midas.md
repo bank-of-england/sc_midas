@@ -77,8 +77,16 @@ target = pd.DataFrame({"date": q_dates, "value": y})
 regressors = pd.DataFrame({"date": ..., "variable": ..., "value": ...})
 ```
 
-Each `variable` in `regressors` is matched by name against the spec
-list.
+The examples below use the built-in simulator so every block runs as-is;
+later blocks continue from these names:
+
+```python
+from nowcast_midas import MultiMIDAS
+from nowcast_midas.utils import sample_combo_data
+
+# long-format frames with monthly_1..3 (ME) + quarterly_1 (QE) regressors
+target, regressors, info = sample_combo_data(n_quarters=60, seed=42)
+```
 
 ## Specifying the model
 
@@ -86,7 +94,7 @@ The simplest call shares the same weight scheme across all monthly
 indicators:
 
 ```python
-from nowcast_midas.multi_midas import MultiMIDAS
+from nowcast_midas import MultiMIDAS
 
 model = MultiMIDAS(
     variables=["monthly_1", "monthly_2"],
@@ -102,7 +110,7 @@ regressors — pass [`VariableSpec`](../api.md#nowcast_midas.specs.VariableSpec)
 objects:
 
 ```python
-from nowcast_midas.specs import VariableSpec
+from nowcast_midas import VariableSpec
 
 model = MultiMIDAS(
     variables=[
@@ -147,10 +155,12 @@ $(\delta_{\ell,0}, \dots, \delta_{\ell,M-1})$.
 fc = model.forecast(regressors)
 ```
 
-`forecast` returns a DataFrame with one row per fitted horizon and the
-columns `horizon`, `date`, `forecast`.  Monthly and quarterly lag rows
-are built independently, and a missing lag in any regressor anchors that
-horizon's forecast to NaN.
+`forecast` returns a **long-format** DataFrame with one row per fitted
+horizon and the columns `date`, `horizon`, `spec`, `value`.  `spec` is
+the `"+"`-joined regressor variable names (a MultiMIDAS forecast is a
+single joint prediction).  Monthly and quarterly lag rows are built
+independently, and a missing lag in any regressor anchors that horizon's
+forecast to NaN.
 
 `fit()` additionally stores the long-format in-sample fitted values as
 `model.fits_df_` (`date`, `horizon`, `value`), and `forecast()` stores its
@@ -172,8 +182,7 @@ a `MultiMIDAS` block as a single named source inside
 [`MidasCombo`](../api.md#nowcast_midas.midas_combo.MidasCombo):
 
 ```python
-from nowcast_midas.specs import MultiMidasSpec, ComboSpec
-from nowcast_midas.midas_combo import MidasCombo
+from nowcast_midas import ComboSpec, MidasCombo, MultiMidasSpec
 
 multi_spec = MultiMidasSpec(
     name="multi_block",

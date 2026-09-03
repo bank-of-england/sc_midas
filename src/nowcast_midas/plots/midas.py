@@ -1,4 +1,4 @@
-"""Plotting methods for :class:`~nowcast_midas.midas.MIDAS`."""
+"""Plotting methods for `MIDAS`."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -231,7 +231,7 @@ class _MIDASPlots:
         if fc_row.empty:
             raise ValueError(f"No forecast found for horizon {horizon}.")
 
-        fc = fc_row["forecast"].to_numpy()
+        fc = fc_row["value"].to_numpy()
         steps = len(fc)
         fc_se = np.full(steps, _residual_std(fit, self.estimator))
 

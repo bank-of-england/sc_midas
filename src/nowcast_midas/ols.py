@@ -126,6 +126,8 @@ class OLS:
         self.fits_df_: pd.DataFrame | None = None
         # Mask (length T) of target rows with finite X and D values.
         self.valid_mask_: np.ndarray | None = None
+        # Indicator name reported in the ``spec`` column of ``forecast()``.
+        self._variable_name: str = "target"
 
     def fit(self, target: pd.DataFrame, regressors: pd.DataFrame) -> OLS:
         """Fit the OLS model from target and quarterly regressor frames.
@@ -133,10 +135,10 @@ class OLS:
         Parameters
         ----------
         target : pd.DataFrame
-            Quarterly target with ``date`` and ``value`` columns.
+            Quarterly target with (at least) ``date`` and ``value`` columns.
         regressors : pd.DataFrame
-            Quarterly regressor for a single variable, with ``date`` and
-            ``value`` columns.
+            Quarterly regressor for a single variable, with (at least)
+            ``date`` and ``value`` columns.
 
         Returns
         -------
@@ -148,12 +150,18 @@ class OLS:
             If either input has invalid columns, missing target values, or
             an unsupported horizon.
         """
-        if list(target.columns) != ["date", "value"]:
+        if not {"date", "value"}.issubset(target.columns):
             raise ValueError("target DataFrame must have 'date' and 'value' columns.")
-        if list(regressors.columns) != ["date", "value"]:
+        if not {"date", "value"}.issubset(regressors.columns):
             raise ValueError(
                 "regressors DataFrame must have 'date' and 'value' columns."
             )
+
+        # Name used in the ``spec`` column of ``forecast()``.
+        if "variable" in regressors.columns and regressors["variable"].notna().any():
+            self._variable_name = str(regressors["variable"].iloc[0])
+        else:
+            self._variable_name = "target"
 
         target = target.sort_values("date")
         regressors = regressors.sort_values("date")
@@ -297,10 +305,27 @@ class OLS:
     ) -> pd.DataFrame:
         """Compute one out-of-sample point forecast per fitted horizon.
 
-        Direct-forecasting date convention (see :meth:`MIDAS.forecast`):
+        Direct-forecasting date convention (see `MIDAS.forecast()`):
         with ``T_X`` the latest available regressor date and the model
         fitted as ``y[t+h] ~ X[t]``, the horizon-h forecast targets
         ``forecast_date = T_X + h``.
+
+        Parameters
+        ----------
+        regressors_forecast : pd.DataFrame
+            Quarterly regressor data with ``date`` and ``value`` columns.
+
+        Returns
+        -------
+        pd.DataFrame
+            Long-format forecasts with columns ``date``, ``horizon``,
+            ``spec``, ``value`` — one row per fitted horizon.  ``spec`` is
+            the regressor ``variable`` value, else ``"target"``.
+
+        Raises
+        ------
+        RuntimeError
+            If the model has not been fitted.
         """
         if not self.fits_:
             raise RuntimeError("Not fitted.  Call fit() first.")
@@ -342,9 +367,18 @@ class OLS:
                         forecast_val += float(y_ar @ fit.phi)
                 if not np.isfinite(forecast_val):
                     forecast_val = np.nan
-            rows.append({"horizon": h, "date": forecast_date, "forecast": forecast_val})
+            rows.append(
+                {
+                    "date": forecast_date,
+                    "horizon": h,
+                    "spec": self._variable_name,
+                    "value": forecast_val,
+                }
+            )
 
-        self.forecasts_df_ = pd.DataFrame(rows)
+        self.forecasts_df_ = pd.DataFrame(
+            rows, columns=["date", "horizon", "spec", "value"]
+        )
         return self.forecasts_df_
 
     # -- Forecast decomposition -------------------------------------------------
@@ -357,7 +391,7 @@ class OLS:
         """Additive component decomposition of each out-of-sample forecast.
 
         Splits every horizon's point forecast into additive components that
-        sum back to the forecast value produced by :meth:`forecast`::
+        sum back to the forecast value produced by `forecast()`:
 
             forecast[h] = intercept + sum_k coef_k * X[t-k] + dummies + AR-lags
 
@@ -370,7 +404,7 @@ class OLS:
         ----------
         regressors_forecast : pd.DataFrame
             Quarterly regressor data with ``date`` and ``value`` columns
-            (same input as :meth:`forecast`).
+            (same input as `forecast()`).
         regressor_name : str
             Component label for the regressor block (default ``"X"``).
 

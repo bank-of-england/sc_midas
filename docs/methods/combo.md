@@ -5,15 +5,10 @@ regression and combination weights across fitted sources. This page defines
 both kinds.
 
 Each non-leaf `ComboSpec` node produces a time-varying weight vector over its
-sources. For inverse-error weighting, the source weight is proportional to
-the inverse of its discounted error statistic:
-
-$$
-w^{(m)}_t \;\propto\; \Bigl(\tfrac{1}{|C_t|} \sum_{s\in C_t}
-   \delta^{t-1-s}\, (y_s - \hat y^{(m)}_s)^2 \Bigr)^{-1},
-\qquad
-\sum_m w^{(m)}_t = 1.
-$$
+sources that sums to one. For inverse-error weighting the source weight is the
+normalised inverse of a discounted error statistic, defined once under
+[`'mae'`, `'mse'`, `'rmse'`](#mae-mse-rmse) below and referenced from the
+[SC-MIDAS framework](sc_midas_framework.md) page.
 
 ## Temporal weights
 
@@ -76,25 +71,23 @@ $$
 
 ### `'mae'`, `'mse'`, `'rmse'`
 
-Inverse-error weighting with an exponential discount on past
-residuals.  Let
+Inverse-error weighting with an exponential discount on past residuals. Rows
+containing a missing value in any source are removed before the latest $W$
+complete rows are selected; $C_t$ is that common sample. The source weight is
+the normalised inverse of a discounted error statistic:
 
 $$
-e^{(m)}_t = y_t - \hat y^{(m)}_t,
+S^{(m)}_t \;=\; \frac{1}{|C_t|} \sum_{s \in C_t}
+   \delta^{\,t-s}\, \bigl|\,y_s - \hat y^{(m)}_s\,\bigr|^{p},
 \qquad
-S^{(m)}_t \;=\; \tfrac{1}{|C_t|}\sum_{s\in C_t}
-   \delta_s\big|e^{(m)}_s\big|^{p}
+w^{(m)}_t \;=\; \frac{1/S^{(m)}_t}{\sum_{m'} 1/S^{(m')}_t},
 $$
 
-with $p = 1$ for `mae`, $p = 2$ for `mse` and `rmse`
-(`rmse` takes the square root before inverting), window $W$ =
-`window`, and discount $\delta$ = `discount_rate`. Rows containing a
-missing value in any source are removed before the latest $W$ complete rows
-are selected; $C_t$ is that common sample. Weights are then
-
-$$
-w^{(m)}_t \;=\; \frac{1 / S^{(m)}_t}{\sum_{m'} 1 / S^{(m')}_t}.
-$$
+with $p = 1$ for `mae`, $p = 2$ for `mse` / `rmse` (`rmse` takes $\sqrt{S}$
+before inverting), discount $\delta$ = `discount_rate` $\in (0, 1]$, and
+window $|C_t| \le W$ = `window` (equal to `window` once the window is full).
+The most recent residual carries weight $\delta^{0} = 1$; older residuals
+decay geometrically.
 
 The function is called once for each direct forecasting horizon, after the
 horizon-specific source fits have been selected. It returns in-sample weight

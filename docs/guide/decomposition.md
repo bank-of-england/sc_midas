@@ -159,6 +159,11 @@ economic pieces:
 
 From `model.forecast_decomp(aggregate=True)`:
 
+> The `decomposition` and `revision_source` columns below are added by the
+> real-time integration (see [§2](#2-columns)), not by a plain
+> `forecast_decomp()`, which returns only `horizon`, `date`, `component`,
+> `contribution` and `weight`.
+
 | component | contribution | weight | decomposition | revision_source |
 |---|---|---|---|---|
 | `gdp_growth_rate::intercept` | 0.0575 | 0.5229 | level | — |

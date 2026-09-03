@@ -3,8 +3,8 @@
 # ============================================================================
 
 [project]
-site_name  = "Nowcast-MIDAS"
-site_description = "Staggered‑Combination MIDAS model"
+site_name  = "nowcast-midas"
+site_description = "Staggered-Combination MIDAS (SC-MIDAS) model"
 copyright = "Copyright &copy; Bank of England"
 
 nav = [
@@ -24,8 +24,8 @@ nav = [
   ]},
 
   { "Examples" = [
-      { "MIDAS regression" = "notebooks/midas.md" },
-      { "Combination pipeline" = "notebooks/midas_combo.md" },
+      { "Core models" = "examples/core_models.md" },
+      { "Real-time pipeline" = "examples/realtime_pipeline.md" },
   ]},
 
   { "API Reference" = "api.md" },
@@ -79,6 +79,8 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.inlinehilite]
 [project.markdown_extensions.pymdownx.superfences]
 [project.markdown_extensions.pymdownx.snippets]
+base_path = ["docs"]
+check_paths = true
 
 # Admonitions
 [project.markdown_extensions.admonition]

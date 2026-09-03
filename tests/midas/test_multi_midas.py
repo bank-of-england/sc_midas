@@ -119,7 +119,7 @@ def test_multi_midas_recovers_matching_ragged_edge(vintage_date):
         fit.variable_fits["x"].weights, sample.weights, atol=1e-10
     )
     forecast = model.forecast(regressors).iloc[0]
-    np.testing.assert_allclose(forecast["forecast"], sample.target.iloc[-1]["value"])
+    np.testing.assert_allclose(forecast["value"], sample.target.iloc[-1]["value"])
 
 
 def test_multi_midas_rejects_unavailable_months():
@@ -211,8 +211,8 @@ class TestSingleIndicatorEquivalence:
         fc_midas = midas.forecast(reg_single)
         fc_multi = multi.forecast(reg_multi)
         np.testing.assert_allclose(
-            fc_multi["forecast"].values,
-            fc_midas["forecast"].values,
+            fc_multi["value"].values,
+            fc_midas["value"].values,
             atol=1e-10,
         )
 
@@ -599,10 +599,10 @@ def test_start_lag_target_and_forecast_recovery_at_latest_vintage():
         forecast = model.forecast(vintage.regressors).iloc[0]
         assert pd.Timestamp(forecast["date"]) == sample.truth.target_date
         np.testing.assert_allclose(
-            forecast["forecast"], sample.truth.target_value, atol=2e-5
+            forecast["value"], sample.truth.target_value, atol=2e-5
         )
         np.testing.assert_allclose(
-            forecast["forecast"], vintage.independent_forecast, atol=2e-5
+            forecast["value"], vintage.independent_forecast, atol=2e-5
         )
         assert "common origin quarter" in sample.truth.common_origin_equation
 
@@ -668,7 +668,7 @@ def test_trailing_nonfinite_rows_do_not_advance_common_origin_or_lag_anchor():
     expected = model.forecast(vintage.regressors).iloc[0]
 
     assert pd.Timestamp(forecast["date"]) == pd.Timestamp(expected["date"])
-    np.testing.assert_allclose(forecast["forecast"], expected["forecast"])
+    np.testing.assert_allclose(forecast["value"], expected["value"])
     assert set(pd.to_datetime(decomposition["date"])) == {
         pd.Timestamp(expected["date"])
     }
@@ -698,7 +698,7 @@ def test_decomposition_is_empty_when_fitted_parameters_are_nonfinite():
     forecast = model.forecast(vintage.regressors).iloc[0]
     decomposition = model.forecast_decomp(vintage.regressors)
 
-    assert np.isnan(forecast["forecast"])
+    assert np.isnan(forecast["value"])
     assert decomposition.empty
 
 
@@ -830,10 +830,10 @@ def test_held_out_joint_forecast_matches_truth_at_each_stage():
         forecast = model.forecast(vintage.regressors).iloc[0]
         assert pd.Timestamp(forecast["date"]) == sample.truth.target_date
         np.testing.assert_allclose(
-            forecast["forecast"], sample.truth.target_value, atol=2e-5
+            forecast["value"], sample.truth.target_value, atol=2e-5
         )
         np.testing.assert_allclose(
-            forecast["forecast"], vintage.independent_forecast, atol=2e-5
+            forecast["value"], vintage.independent_forecast, atol=2e-5
         )
 
 
@@ -897,7 +897,7 @@ def test_incomplete_forecast_block_returns_nan():
     ] = np.nan
 
     forecast = model.forecast(incomplete).iloc[0]
-    assert np.isnan(forecast["forecast"])
+    assert np.isnan(forecast["value"])
 
 
 def test_decomposition_is_empty_when_required_block_is_missing_or_infinite():
@@ -918,7 +918,7 @@ def test_decomposition_is_empty_when_required_block_is_missing_or_infinite():
 
         forecast = model.forecast(incomplete).iloc[0]
         decomposition = model.forecast_decomp(incomplete)
-        assert np.isnan(forecast["forecast"])
+        assert np.isnan(forecast["value"])
         assert decomposition.empty
 
 
@@ -928,8 +928,8 @@ def test_joint_forecast_with_and_without_dummies():
     with_dummy = _fit_sample_vintage(sample, vintage, include_dummy=True)
     without_dummy = _fit_sample_vintage(sample, vintage)
 
-    forecast_with = with_dummy.forecast(vintage.regressors).iloc[0]["forecast"]
-    forecast_without = without_dummy.forecast(vintage.regressors).iloc[0]["forecast"]
+    forecast_with = with_dummy.forecast(vintage.regressors).iloc[0]["value"]
+    forecast_without = without_dummy.forecast(vintage.regressors).iloc[0]["value"]
     np.testing.assert_allclose(forecast_with, sample.truth.target_value, atol=2e-5)
     assert abs(forecast_without - forecast_with) > 1e-3
 
@@ -944,7 +944,7 @@ def test_joint_forecast_decomposition_sums_to_forecast():
     assert set(decomposition["horizon"]) == {vintage.horizon}
     assert set(pd.to_datetime(decomposition["date"])) == {sample.truth.target_date}
     np.testing.assert_allclose(
-        decomposition["contribution"].sum(), forecast["forecast"], atol=1e-9
+        decomposition["contribution"].sum(), forecast["value"], atol=1e-9
     )
 
 
@@ -1115,7 +1115,7 @@ class TestQuarterlyRegressors:
         multi.fit(target[["date", "value"]], reg_df)
         fc = multi.forecast(reg_df)
         assert fc is not None
-        assert np.isfinite(fc["forecast"].values[0])
+        assert np.isfinite(fc["value"].values[0])
 
     def test_multiple_quarterly_lags(self):
         """QE variable with n_lags=2 stores 2 delta coefficients."""
@@ -1287,7 +1287,7 @@ class TestMultiMIDASExactRecovery:
         multi.fit(target_train[["date", "value"]], reg_df)
         reg_fc = reg_df[reg_df["date"] <= held_out_date]
         fc = multi.forecast(reg_fc)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=self.ATOL_FC)
 
     def test_forecast_accuracy_nls(self):
@@ -1318,7 +1318,7 @@ class TestMultiMIDASExactRecovery:
         multi.fit(target_train[["date", "value"]], reg_df)
         reg_fc = reg_df[reg_df["date"] <= held_out_date]
         fc = multi.forecast(reg_fc)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=self.ATOL_FC)
 
 
@@ -1383,8 +1383,8 @@ class TestMultiMIDASRaggedEdge:
         fc_m = midas.forecast(reg)
         fc_mm = multi.forecast(reg_multi)
         np.testing.assert_allclose(
-            fc_mm["forecast"].to_numpy(),
-            fc_m["forecast"].to_numpy(),
+            fc_mm["value"].to_numpy(),
+            fc_m["value"].to_numpy(),
             rtol=1e-9,
             atol=1e-9,
         )
@@ -1450,7 +1450,7 @@ class TestMultiMIDASRaggedEdge:
 
         reg_fc = reg_long[reg_long["date"] <= held_out_date]
         fc = multi.forecast(reg_fc)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=1e-6)
 
 
@@ -1482,7 +1482,7 @@ class TestMultiMIDASForecastDecomp:
         assert {"intercept", "PMI", "IP"}.issubset(set(decomp["component"]))
         for h in [0, 1, 2]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-8)
 
     def test_sum_to_forecast_mixed_frequency(self):
@@ -1511,5 +1511,5 @@ class TestMultiMIDASForecastDecomp:
         assert (decomp.loc[decomp["component"] == "intercept", "weight"] == 1.0).all()
 
         s = decomp.loc[decomp["horizon"] == 0, "contribution"].sum()
-        f = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        f = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(s, f, atol=1e-8)

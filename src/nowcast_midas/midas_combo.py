@@ -4,10 +4,10 @@ Combination of MIDAS nowcasts.
 Pipeline
 --------
 1.  Accept quarterly target and monthly regressors as DataFrames.
-2.  Fit a :class:`~nowcast_midas.midas.MIDAS` model for each
-    :class:`~nowcast_midas.specs.MidasSpec`.
+2.  Fit a `MIDAS` model for each
+    `MidasSpec`.
 3.  Combine fitted values according to a hierarchy of
-    :class:`~nowcast_midas.specs.ComboSpec` nodes.
+    `ComboSpec` nodes.
 
 Combination methods
 ~~~~~~~~~~~~~~~~~~~
@@ -56,7 +56,7 @@ class MidasCombo(_ComboPlots):
 
     Fits individual MIDAS / OLS regressions for the indicators
     referenced by the combination tree and combines them according to
-    the supplied hierarchy of :class:`ComboSpec` nodes.
+    the supplied hierarchy of `ComboSpec` nodes.
 
     The pipeline derives MIDAS, OLS, and MultiMIDAS indicator specs from
     ``combo_specs``. It registers each spec object that appears as a source
@@ -66,8 +66,8 @@ class MidasCombo(_ComboPlots):
     ----------
     combo_specs : ComboSpec | None
         Root combination node.  ``sources`` may mix variable / combo
-        name strings, :class:`MidasSpec` / :class:`OLSSpec` /
-        :class:`MultiMidasSpec` instances and nested :class:`ComboSpec`
+        name strings, `MidasSpec` / `OLSSpec` /
+        `MultiMidasSpec` instances and nested `ComboSpec`
         instances.  The tree is automatically flattened into dependency
         order.
     horizons : int
@@ -78,7 +78,7 @@ class MidasCombo(_ComboPlots):
     Raises
     ------
     TypeError
-        If *combo_specs* is not a :class:`ComboSpec`.
+        If *combo_specs* is not a `ComboSpec`.
     ValueError
         If model names collide or a combination method is invalid.
     """
@@ -172,11 +172,16 @@ class MidasCombo(_ComboPlots):
         Parameters
         ----------
         target : pd.DataFrame
-            Quarterly target with columns ``date``, ``variable``,
-            ``frequency``, ``value``.
+            Quarterly target in long format with columns ``date``,
+            ``variable``, ``frequency``, ``value``. Must contain exactly one
+            ``variable``; every ``frequency`` entry must be ``"QE"``
+            (case-insensitive); ``value`` must be NaN-free.
         regressors : pd.DataFrame
-            Monthly regressors with columns ``date``, ``variable``,
-            ``frequency``, ``value``.
+            Regressors in long format with the same four columns. MIDAS
+            indicators must use ``frequency="ME"`` (monthly); OLS indicators
+            must use ``frequency="QE"`` (quarterly); each ``variable`` must
+            carry a single frequency. Trailing NaNs (ragged edge) in
+            ``value`` are allowed.
 
         Returns
         -------
@@ -239,7 +244,7 @@ class MidasCombo(_ComboPlots):
     def forecast(self) -> pd.DataFrame:
         """Compute out-of-sample forecasts for 1qa .. horizons.
 
-        Must be called after :meth:`fit`.
+        Must be called after `fit()`.
 
         Produces one long-format row per leaf and combination for each
         requested application step. A row is ``NaN`` when its leaf lacks
@@ -302,8 +307,10 @@ class MidasCombo(_ComboPlots):
             lambda r: pd.DateOffset(months=3 * (r + 1))
         )
 
-        # Rename step to horizon
-        self.forecasts_df_ = forecasts_df_.rename(columns={"step": "horizon"})
+        # Rename step to horizon and use the canonical column order.
+        self.forecasts_df_ = forecasts_df_.rename(columns={"step": "horizon"})[
+            ["date", "horizon", "spec", "value"]
+        ]
 
         # ------------------------------------------------------------------
         # Step 4: combine fits_df_ and forecasts_df_ into a single long df.
@@ -441,7 +448,7 @@ class MidasCombo(_ComboPlots):
             fc = mdl.forecast(reg)
             matching = fc.loc[
                 fc["horizon"] == horizon,
-                "forecast",
+                "value",
             ]
             out[variable] = float(matching.iloc[0]) if len(matching) else np.nan
 
@@ -460,7 +467,7 @@ class MidasCombo(_ComboPlots):
             fc = mdl.forecast(reg)
             matching = fc.loc[
                 fc["horizon"] == horizon,
-                "forecast",
+                "value",
             ]
             out[name] = float(matching.iloc[0]) if len(matching) else np.nan
 
@@ -521,14 +528,14 @@ class MidasCombo(_ComboPlots):
     ) -> pd.DataFrame:
         """Additive component decomposition of a combo's OOS forecast.
 
-        The combined forecast of a :class:`ComboSpec` is a weighted sum of
+        The combined forecast of a `ComboSpec` is a weighted sum of
         its source forecasts, and each source is itself a (possibly nested)
         combination of individual MIDAS / OLS / MultiMIDAS indicator models.
         This routine flattens that hierarchy down to the indicator models,
         computes each indicator's *effective* combination weight in the
         target combo, and pushes that weight through the indicator's own
-        :meth:`forecast_decomp` so every component sums back to the combined
-        forecast produced by :meth:`forecast`::
+        `forecast_decomp()` so every component sums back to the combined
+        forecast produced by `forecast()`:
 
             forecast[h] = sum_models  w_eff_model
                           * sum_components  contribution_{model, component}
@@ -542,7 +549,7 @@ class MidasCombo(_ComboPlots):
         ----------
         spec_name : str | None
             Name of the combo (or leaf indicator model) to decompose.
-            Defaults to the root :class:`ComboSpec` passed at construction.
+            Defaults to the root `ComboSpec` passed at construction.
         regressors : pd.DataFrame | None
             Long-format regressors to use for the decomposition. If None,
             the regressors stored at fit time (``self.regressors_``) are used.
@@ -640,7 +647,7 @@ class MidasCombo(_ComboPlots):
 
     @staticmethod
     def _resolve_oos_weight(w_arr: np.ndarray, w_idx: int) -> float:
-        """Resolve the applicable OOS weight (mirrors :meth:`_forecast_combos`)."""
+        """Resolve the applicable OOS weight (mirrors `_forecast_combos()`)."""
         if w_idx < len(w_arr) and np.isfinite(w_arr[w_idx]):
             return float(w_arr[w_idx])
         finite = w_arr[np.isfinite(w_arr)]
@@ -771,7 +778,23 @@ class MidasCombo(_ComboPlots):
         )
 
     def summary(self, horizon: int = 0) -> str:
-        """Return a formatted summary of all models and combinations."""
+        """Print a formatted summary of all models and combinations and return it.
+
+        Parameters
+        ----------
+        horizon : int
+            The forecast horizon to summarise.
+
+        Returns
+        -------
+        str
+            The formatted summary text (also printed to stdout).
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted yet.
+        """
 
         # check that the model has been fitted first
         if self.target_ is None or self.fitted_ is None:
@@ -836,7 +859,9 @@ class MidasCombo(_ComboPlots):
                     lines.append(f"        {src}: {latest:.4f}")
 
         lines.append(sep)
-        return "\n".join(lines)
+        text = "\n".join(lines)
+        print(text)
+        return text
 
     # ---------------------------------------------------------------------- #
     #  Stage 1: MIDAS models                                                 #
@@ -918,11 +943,11 @@ class MidasCombo(_ComboPlots):
             self.fits_df_ = pd.concat(midas_dfs_list, ignore_index=True)
 
     def _fit_ols_models(self) -> None:
-        """Fit a quarterly :class:`~nowcast_midas.ols.OLS` model per :class:`OLSSpec`.
+        """Fit a quarterly `OLS` model per `OLSSpec`.
 
         Fitted values are mapped back into the full T-length target
         array (NaN where lags / dummies were missing) and stored under
-        ``self.fitted_[spec.variable][h]`` so that :class:`ComboSpec`
+        ``self.fitted_[spec.variable][h]`` so that `ComboSpec`
         nodes can consume them transparently.
         """
         T = len(self.target_)
@@ -998,8 +1023,8 @@ class MidasCombo(_ComboPlots):
                 self.fits_df_ = ols_fits_df
 
     def _fit_multi_midas_models(self) -> None:
-        """Fit :class:`~nowcast_midas.multi_midas.MultiMIDAS` models per
-        :class:`MultiMidasSpec`.
+        """Fit `MultiMIDAS` models per
+        `MultiMidasSpec`.
 
         Fitted values are mapped back into the full T-length target
         array (NaN where lags were missing) and stored under
@@ -1155,6 +1180,12 @@ def _validate_pipeline_inputs(
     multi_midas_specs: list[MultiMidasSpec] | None = None,
 ) -> None:
     """Raise informative errors if the pipeline inputs are malformed."""
+    for name, df in [("target", target), ("regressors", regressors)]:
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError(
+                f"{name} must be a pandas DataFrame, got {type(df).__name__}."
+            )
+
     required = {"date", "variable", "frequency", "value"}
     for name, df in [("target", target), ("regressors", regressors)]:
         missing = required - set(df.columns)

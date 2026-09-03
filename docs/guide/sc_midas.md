@@ -23,8 +23,22 @@ Both `target` and `regressors` are **long-format** DataFrames:
   no NaNs in `value`.
 * `regressors` may mix monthly (`'ME'`, modelled by `MidasSpec`) and
   quarterly (`'QE'`, modelled by `OLSSpec`); the `frequency` column
-  selects the path per variable. Name collisions between MIDAS and OLS
-  variables raise `ValueError`.
+  selects the path per variable and each variable must carry a single
+  frequency. Trailing NaNs (the ragged edge) in `value` are allowed.
+  Name collisions between MIDAS and OLS variables raise `ValueError`.
+* `frequency` values are matched case-insensitively (`"qe"` == `"QE"`).
+
+The examples on this page use the built-in simulator so every block runs
+as-is. Later blocks continue from the names defined here:
+
+```python
+from nowcast_midas import ComboSpec, MidasCombo, MidasSpec, OLSSpec
+from nowcast_midas.utils import sample_combo_data
+
+# long-format target + regressors (monthly_1..3 at "ME", quarterly_1 at "QE")
+target, regressors, info = sample_combo_data(n_quarters=60, seed=42)
+outlier = info["outlier_date"]  # injected -25 shock at 2020-06-30
+```
 
 ## Specifications
 
@@ -78,6 +92,17 @@ $$
 
 ```python
 from nowcast_midas import ComboSpec
+
+midas_monthly_1 = MidasSpec(
+    "monthly_1", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+midas_monthly_2 = MidasSpec(
+    "monthly_2", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+midas_monthly_3 = MidasSpec(
+    "monthly_3", method="unrestricted", n_lags=3, dummy_periods=[outlier]
+)
+ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1, dummy_periods=[outlier])
 
 soft = ComboSpec(
     name="soft",
@@ -154,7 +179,7 @@ Internally `fit()` runs three stages:
 | `weights_df_`           | `DataFrame` — `spec, source, horizon, value` | long-format combination weights         |
 
 ```python
-print(model.summary(horizon=0))
+model.summary(horizon=0)  # prints and returns the text
 ```
 
 ## Out-of-sample forecast
@@ -238,11 +263,21 @@ All three return `(fig, ax)` so you can customise or save the figure.
 ## End-to-end example
 
 ```python
-from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import ComboSpec, MidasCombo, MidasSpec, OLSSpec
+from nowcast_midas.utils import sample_combo_data
 
-midas_monthly_1 = MidasSpec("monthly_1", method="almon", n_lags=5)
-midas_monthly_2 = MidasSpec("monthly_2", method="almon", n_lags=5)
-ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1)
+target, regressors, info = sample_combo_data(n_quarters=60, seed=42)
+outlier = info["outlier_date"]
+
+# sample_combo_data() injects a -25 outlier by default; without a dummy the
+# fit degrades badly (RMSE ~3.5 vs ~1.1), so pass it to every spec.
+midas_monthly_1 = MidasSpec(
+    "monthly_1", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+midas_monthly_2 = MidasSpec(
+    "monthly_2", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1, dummy_periods=[outlier])
 
 soft = ComboSpec(
     "soft",
@@ -257,7 +292,7 @@ final = ComboSpec(
 
 model = MidasCombo(combo_specs=final, horizons=3).fit(target, regressors)
 forecasts = model.forecast()
+print(forecasts.head())
 ```
 
-A fully worked, plotted version is available as a notebook:
-[Combination pipeline](../notebooks/midas_combo.md).
+A runnable end-to-end version is in [Worked examples](../examples/core_models.md).
