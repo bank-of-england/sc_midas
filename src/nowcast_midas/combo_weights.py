@@ -32,7 +32,10 @@ def fit_average(
     mat = source_fitted.to_numpy(dtype=float)
     if mat.shape[1] == 0:
         return np.full(len(source_fitted), np.nan), {}
-    combined = np.nanmean(mat, axis=1)
+    all_nan_rows = np.all(np.isnan(mat), axis=1)
+    combined = np.full(mat.shape[0], np.nan)
+    if (~all_nan_rows).any():
+        combined[~all_nan_rows] = np.nanmean(mat[~all_nan_rows], axis=1)
     T, n_models = mat.shape
     weights_mat = np.full((T, n_models), np.nan)
     for t in range(T):

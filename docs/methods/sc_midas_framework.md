@@ -43,21 +43,14 @@ combination weights are derived from rolling-window residuals.  Three
 inverse-error variants are available (mean absolute error, mean squared
 error, root mean squared error) plus equal-weight average.
 
-For inverse-MSE, the weight of source $m$ at time $t$ is
-
-$$
-w^{(m)}_t \;\propto\; \Bigl(\tfrac{1}{W} \sum_{s=t-W+1}^{t}
-   \delta^{t-s}\, (y_s - \hat y^{(m)}_s)^2 \Bigr)^{-1},
-\qquad
-\sum_m w^{(m)}_t = 1,
-$$
-
-with exponential discount factor $\delta = $ `discount_rate` and
-lookback window $W = $ `window`. Complete common rows are selected before
-the window is applied, so a finite window contains exactly $W$ comparable
-observations once it is full. Error weighted combinations use available
-complete rows during warm-up; regression combinations receive equal weight
-$1/n$ until `minimum_sample_size` complete rows exist.
+For inverse-MSE, the weight of source $m$ at time $t$ is the normalised
+inverse of its discounted squared-error statistic $S^{(m)}_t$ — defined once
+in [Weighting schemes](combo.md#mae-mse-rmse) and evaluated here with $p = 2$.
+Complete common rows are selected before the window is applied, so a finite
+window contains exactly $W$ = `window` comparable observations once it is
+full. Error weighted combinations use available complete rows during warm-up;
+regression combinations receive equal weight $1/n$ until `minimum_sample_size`
+complete rows exist.
 
 Before this row-level calculation, sources with fewer than
 `minimum_sample_size` finite fitted observations are removed. The default

@@ -1,0 +1,11 @@
+{
+  "release-type": "python",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "package-name": "nowcast-midas",
+      "versioning": "always-bump-patch"
+    }
+  }
+}

@@ -8,7 +8,7 @@ nul
 # AI stuff:
 .github/copilot-instructions.md
 /plans
-
+.claude/
 # vscode:
 .vscode/
 

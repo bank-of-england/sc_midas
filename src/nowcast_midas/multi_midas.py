@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
+from ._compat import legacy_forecast_alias
 from .specs import VariableSpec
 from .temporal_weights import get_weights
 from .utils import (
@@ -82,13 +83,13 @@ class MultiMIDAS:
     Extends MIDAS regression to multiple high-frequency (monthly)
     regressors.  Each regressor can use either a shared weighting method
     or its own per-variable specification via
-    :class:`~nowcast_midas.specs.VariableSpec`.
+    `VariableSpec`.
 
     Parameters
     ----------
     variables : list[str | VariableSpec]
         Regressors to include.  Pass a plain string to use the shared
-        defaults; pass a :class:`~nowcast_midas.specs.VariableSpec` to
+        defaults; pass a `VariableSpec` to
         override any parameter for that regressor.  Use
         ``VariableSpec(..., frequency='QE')`` for quarterly regressors.
     method : str
@@ -118,12 +119,12 @@ class MultiMIDAS:
 
     Examples
     --------
-    All regressors share the same method::
+    All regressors share the same method:
 
         mc = MultiMIDAS(["PMI", "IP", "CLI"], method="almon", n_lags=6)
         mc.fit(target, regressors)
 
-    Per-variable specs with a quarterly regressor::
+    Per-variable specs with a quarterly regressor:
 
         mc = MultiMIDAS([
             VariableSpec("PMI",  method="exp_almon", n_lags=6),
@@ -216,6 +217,11 @@ class MultiMIDAS:
         self.valid_mask_: np.ndarray | None = None
         self.target_: pd.DataFrame | None = None
         self.forecasts_df_: pd.DataFrame | None = None
+
+        # Name reported in the ``spec`` column of ``forecast()``.  A
+        # MultiMIDAS forecast is a single joint prediction, so all variables
+        # are folded into one label.
+        self._spec_name = "+".join(s.variable for s in self.specs)
 
     # ---------------------------------------------------------------------- #
     #  fit                                                                     #
@@ -595,6 +601,7 @@ class MultiMIDAS:
     #  forecast                                                                #
     # ---------------------------------------------------------------------- #
 
+    @legacy_forecast_alias
     def forecast(
         self,
         regressors: pd.DataFrame,
@@ -609,7 +616,10 @@ class MultiMIDAS:
         Returns
         -------
         pd.DataFrame
-            Columns ``horizon``, ``date``, and ``forecast``.
+            Long-format forecasts with columns ``date``, ``horizon``,
+            ``spec``, ``value`` — one row per fitted horizon.  ``spec`` is
+            the ``"+"``-joined regressor variable names (a MultiMIDAS
+            forecast is a single joint prediction).
 
         Raises
         ------
@@ -689,9 +699,18 @@ class MultiMIDAS:
             if not complete or not np.isfinite(fc_val):
                 fc_val = np.nan
 
-            rows.append({"horizon": h, "date": forecast_date, "forecast": fc_val})
+            rows.append(
+                {
+                    "date": forecast_date,
+                    "horizon": h,
+                    "spec": self._spec_name,
+                    "value": fc_val,
+                }
+            )
 
-        self.forecasts_df_ = pd.DataFrame(rows)
+        self.forecasts_df_ = pd.DataFrame(
+            rows, columns=["date", "horizon", "spec", "value"]
+        )
         return self.forecasts_df_
 
     # ---------------------------------------------------------------------- #
@@ -705,7 +724,7 @@ class MultiMIDAS:
         """Additive component decomposition of each out-of-sample forecast.
 
         Splits every horizon's point forecast into additive components that
-        sum back to the forecast value produced by :meth:`forecast`::
+        sum back to the forecast value produced by `forecast()`:
 
             forecast[h] = intercept
                         + sum_k  monthly-MIDAS-block_k
@@ -721,7 +740,7 @@ class MultiMIDAS:
         ----------
         regressors : pd.DataFrame
             High-frequency regressors with ``date``, ``variable`` and
-            ``value`` columns (same input as :meth:`forecast`).
+            ``value`` columns (same input as `forecast()`).
 
         Returns
         -------
@@ -870,13 +889,18 @@ class MultiMIDAS:
     #  summary                                                                 #
     # ---------------------------------------------------------------------- #
 
-    def summary(self, horizon: int = 0) -> None:
-        """Print a formatted summary of the fitted model for one horizon.
+    def summary(self, horizon: int = 0) -> str:
+        """Print a formatted summary of the fitted model for one horizon and return it.
 
         Parameters
         ----------
         horizon : int
             Horizon to summarise (default 0).
+
+        Returns
+        -------
+        str
+            The formatted summary text (also printed to stdout).
 
         Raises
         ------
@@ -932,7 +956,9 @@ class MultiMIDAS:
             lines.append(f"  phi[{i + 1}]   = {p: .6f}")
 
         lines.extend([thin, f"  SSE  : {sse: .6f}", f"  RMSE : {rmse: .6f}", sep])
-        print("\n".join(lines))
+        text = "\n".join(lines)
+        print(text)
+        return text
 
 
 def _resolve_specs(
@@ -964,7 +990,7 @@ def _resolve_specs(
 
 @dataclass
 class VariableFit:
-    """Fitted parameters for one regressor within a :class:`MultiMIDAS` model.
+    """Fitted parameters for one regressor within a `MultiMIDAS` model.
 
     Attributes
     ----------
@@ -989,14 +1015,14 @@ class VariableFit:
 
 @dataclass
 class FittedMultiMidas:
-    """Fitted result for a single horizon of a :class:`MultiMIDAS` model.
+    """Fitted result for a single horizon of a `MultiMIDAS` model.
 
     Attributes
     ----------
     alpha : float
         Estimated intercept.
     variable_fits : dict[str, VariableFit]
-        Mapping from variable name to :class:`VariableFit`.
+        Mapping from variable name to `VariableFit`.
     gamma : np.ndarray
         Dummy coefficients (empty if no dummies).
     phi : np.ndarray

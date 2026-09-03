@@ -1,6 +1,7 @@
 # nowcast-midas
 
-**Staggered-Combination MIDAS**: a Python implementation of the staggered-combination MIDAS model.
+**`nowcast-midas`** — a Python implementation of the Staggered-Combination MIDAS
+(SC-MIDAS) model.
 
 The package combines:
 
@@ -27,44 +28,63 @@ $$
 
 A single indicator rarely captures the full picture.  Soft survey data
 moves early, hard activity data is more accurate but lags.  SC-MIDAS
-addresses this with a two-layer combination:
+addresses this with a two-layer combination (the methods pages call these
+Layer 1 and Layer 2):
 
-1. A **soft combo** pools many MIDAS indicators with error-weighted
+1. A **soft combo** (Layer 1) pools many MIDAS indicators with error-weighted
    weights — fast-moving signal.
-2. A **final combo** uses constrained regression to merge the soft combo
-   with a quarterly regressor (typically a partial release of GDP),
+2. A **final combo** (Layer 2) uses constrained regression to merge the soft
+   combo with a quarterly regressor (typically a partial release of GDP),
    yielding a single best-estimate nowcast for each forecast horizon.
 
 ## Quick start
 
 ```python
-from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import ComboSpec, MidasCombo, MidasSpec, OLSSpec
+from nowcast_midas.utils import sample_combo_data
 
-midas_monthly_1 = MidasSpec("monthly_1", method="almon", n_lags=5)
-midas_monthly_2 = MidasSpec("monthly_2", method="almon", n_lags=5)
-midas_monthly_3 = MidasSpec("monthly_3", method="unrestricted", n_lags=3)
-ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1)
+# Simulated mixed-frequency data: three monthly series, one quarterly
+# regressor, one quarterly target, plus one injected outlier.
+target_df, regressors_df, info = sample_combo_data(n_quarters=60, seed=42)
+outlier = info["outlier_date"]
+
+midas_monthly_1 = MidasSpec(
+    "monthly_1", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+midas_monthly_2 = MidasSpec(
+    "monthly_2", method="almon", n_lags=6, dummy_periods=[outlier]
+)
+midas_monthly_3 = MidasSpec(
+    "monthly_3", method="unrestricted", n_lags=3, dummy_periods=[outlier]
+)
+ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1, dummy_periods=[outlier])
 
 soft = ComboSpec(
     "soft",
     sources=[midas_monthly_1, midas_monthly_2, midas_monthly_3],
-    method="mse",
+    method="mse",  # inverse mean-squared-error weights — see methods/combo.md
     window=8,
     discount_rate=0.95,
 )
-final = ComboSpec(
-    "final", sources=[soft, ols_quarterly_1], method="regression", window=None
-)
+final = ComboSpec("final", sources=[soft, ols_quarterly_1], method="regression")
 
-model = MidasCombo(combo_specs=final, horizons=3)
+model = MidasCombo(combo_specs=final, horizons=3)  # horizons is a COUNT, not an index
 model.fit(target=target_df, regressors=regressors_df)
-forecasts = model.forecast()
+
+forecasts = model.forecast()  # long format: one row per (spec, horizon step)
+print(forecasts.head())
+model.summary(horizon=0)  # prints and returns the text
 ```
 
-See the fully worked notebook, which includes data simulation and plots:
-[Worked example](notebooks/midas_combo.md).
+> This is the same example as the project README. Runnable end-to-end scripts are
+> in [Worked examples](examples/core_models.md).
 
 ## Where to go next
+
+Working with a **single indicator**? Start with
+[User Guide — MIDAS model](guide/midas_model.md). Building the **full
+combination pipeline**? Go to [User Guide — SC-MIDAS pipeline](guide/sc_midas.md),
+then [Worked examples](examples/core_models.md) for runnable end-to-end scripts.
 
 * **[User Guide — MIDAS model](guide/midas_model.md)** — the
   single-indicator estimator: weighting schemes, OLS/NLS, AR lags,

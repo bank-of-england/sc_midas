@@ -302,6 +302,12 @@ class TestMidasComboValidation:
         with pytest.raises(ValueError, match="missing columns"):
             model.fit(bad_target, regressors)
 
+    def test_non_dataframe_input_raises_typeerror(self, regressors):
+        midas_pmi = MidasSpec("PMI")
+        model = MidasCombo(combo_specs=ComboSpec("c", [midas_pmi]))
+        with pytest.raises(TypeError, match="target must be a pandas DataFrame"):
+            model.fit({"date": [1], "value": [1]}, regressors)
+
     def test_unknown_variable_raises(self, target, regressors):
         midas_missing = MidasSpec("MISSING")
         model = MidasCombo(

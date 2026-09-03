@@ -27,54 +27,65 @@ Read the [user manual](docs/index.md) for the full guide.
     └── ...
 
 ## Installation
+
+### From PyPi:
 ```bash
-pip install -e .                   # runtime
-pip install -e ".[dev]"            # + test / lint tooling
-pip install -e ".[docs]"           # + Zensical docs build
+pip install nowcast-midas
+```
+
+### Dev version:
+```bash
+git clone https://github.com/bank-of-england/nowcast-midas.git
+cd nowcast-midas
+pip install -e .                      # runtime
+pip install -e ".[dev]"               # + test / lint / docs tooling
+pip install -e ".[realtime]"          # + real-time (vintage) analysis stack
 ```
 
 Python ≥ 3.10.
 
 ## Quick start
 ```python
-from nowcast_midas import MidasCombo, MidasSpec, OLSSpec, ComboSpec
+from nowcast_midas import ComboSpec, MidasCombo, MidasSpec, OLSSpec
 from nowcast_midas.utils import sample_combo_data
 
-# Simulated data: three monthly series, one quarterly regressor, and a quarterly target.
-target, regressors, info = sample_combo_data(n_quarters=60, seed=42)
+# Simulated mixed-frequency data: three monthly series, one quarterly
+# regressor, one quarterly target, plus one injected outlier.
+target_df, regressors_df, info = sample_combo_data(n_quarters=60, seed=42)
 outlier = info["outlier_date"]
 
-# Two monthly MIDAS indicators and one quarterly OLS indicator.
 midas_monthly_1 = MidasSpec(
     "monthly_1", method="almon", n_lags=6, dummy_periods=[outlier]
 )
 midas_monthly_2 = MidasSpec(
     "monthly_2", method="almon", n_lags=6, dummy_periods=[outlier]
 )
+midas_monthly_3 = MidasSpec(
+    "monthly_3", method="unrestricted", n_lags=3, dummy_periods=[outlier]
+)
 ols_quarterly_1 = OLSSpec("quarterly_1", n_lags=1, dummy_periods=[outlier])
 
-# Two MIDAS models combined via inverse-MSE weights ...
-soft_combo = ComboSpec(
-    name="soft_combo",
-    sources=[midas_monthly_1, midas_monthly_2],
-    method="mse",
+soft = ComboSpec(
+    "soft",
+    sources=[midas_monthly_1, midas_monthly_2, midas_monthly_3],
+    method="mse",  # inverse mean-squared-error weights — see docs/methods/combo.md
     window=8,
     discount_rate=0.95,
 )
+final = ComboSpec("final", sources=[soft, ols_quarterly_1], method="regression")
 
-# ... then merged with a quarterly OLS model via constrained regression.
-final_combo = ComboSpec(
-    name="final_combo",
-    sources=[soft_combo, ols_quarterly_1],
-    method="regression",
-)
+model = MidasCombo(combo_specs=final, horizons=3)  # horizons is a COUNT, not an index
+model.fit(target=target_df, regressors=regressors_df)
 
-model = MidasCombo(combo_specs=final_combo, horizons=3)
-
-model.fit(target=target, regressors=regressors)
-oos = model.forecast()  # wide table: one column per (variable, horizon)
-print(model.summary(horizon=0))
+oos = model.forecast()  # long format: one row per (spec, horizon step);
+# columns horizon, spec, value, date
+print(oos.head())
+model.summary(horizon=0)  # prints and returns the text
 ```
+
+This is the same example as [`docs/index.md`](docs/index.md); runnable end-to-end
+scripts are in [`examples/`](examples/) and rendered in
+[Worked examples](docs/examples/core_models.md).
 
 ## Selected documentation
 * [SC-MIDAS framework](docs/methods/sc_midas_framework.md)

@@ -27,32 +27,49 @@ $$
 
 ## Input data
 
-`fit` takes two **2-column** DataFrames:
+`fit` takes two **2-column** DataFrames — a quarterly `target` and a
+monthly `regressors` frame, each with exactly the columns `date` and
+`value`. The frequencies are inferred from the date spacing:
 
 ```python
+# illustrative shape — build these from your own data
 target = pd.DataFrame({"date": q_dates, "value": y})  # quarterly
 regressors = pd.DataFrame({"date": m_dates, "value": x})  # monthly
 ```
 
-The frequencies are inferred from the date spacing; both frames must
-have exactly the columns `date` and `value`.
+The examples on this page use the built-in simulator so every block runs
+as-is. Each later block continues from the names defined here:
+
+```python
+from nowcast_midas import MIDAS
+from nowcast_midas.utils import sample_data
+
+# date/value quarterly target + date/value monthly indicator
+target, regressors = sample_data(n_obs=100, seed=42)
+```
 
 ## Specifying the model
 
 ```python
-from nowcast_midas.midas import MIDAS
+from nowcast_midas import MIDAS
 
 model = MIDAS(
     method="almon",  # 'almon', 'exp_almon', 'beta', 'unrestricted'
     n_lags=6,  # high-frequency lags per low-frequency obs
     n_pars_weights=2,  # shape parameters of the weight scheme
     estimator=None,  # 'ols' / 'nls' (auto-selected from method)
-    horizons=[0, 1, 4],  # which horizons to fit (default [0])
+    horizons=[0, 1, 4],  # explicit list of horizons to fit (default None -> [0])
     start_lag=0,  # shift the lag window forward by k high-frequency periods
     n_ar_lags=0,  # autoregressive lags of y (0 = no AR term)
     dummy_periods=None,  # list[pd.Timestamp] of outlier quarters
 )
 ```
+
+!!! note "`horizons` here is a list, not a count"
+    `MIDAS(horizons=...)` takes an explicit list of horizon indices to fit
+    (`None` is treated as `[0]`, i.e. nowcast only). This is different from
+    `MidasCombo(horizons=...)`, which takes an `int` — the *number* of
+    application forecast steps to produce.
 
 ### Weighting schemes (`method`)
 
@@ -69,7 +86,7 @@ model reduces to a closed-form least-squares problem (`estimator='ols'`).
 `least_squares` with an analytical Jacobian (`estimator='nls'`).
 
 See the [weighting schemes page](../methods/combo.md#temporal-weights)
-for full definitions and shape gallery.
+for full definitions.
 
 ### Estimator (`estimator`)
 
@@ -136,16 +153,19 @@ target rows used for estimation.
 ## Forecasting
 
 ```python
-fc = model.forecast(regressors_available)
+fc = model.forecast(regressors)
 ```
 
-`forecast()` produces **one row per fitted horizon**:
+`forecast()` produces a **long-format** DataFrame with columns
+`date`, `horizon`, `spec`, `value` — one row per fitted horizon. `spec`
+is the indicator name (the regressor `variable` value, or `"target"`
+when the frame has no `variable` column):
 
 ```
-   horizon       date  forecast
-0        0 2025-03-31     1.23
-1        1 2025-06-30     1.18
-2        4 2026-03-31     1.05
+        date  horizon    spec  value
+0 2025-03-31        0  target   1.23
+1 2025-06-30        1  target   1.18
+2 2026-03-31        4  target   1.05
 ```
 
 Mechanics:
@@ -173,12 +193,12 @@ lead, so a forecast is OOS even with training-period regressors.
 
 `fit()` also stores the in-sample fitted values as
 `model.fits_df_` (`date`, `horizon`, `value`), and `forecast()` stores its
-return value as `model.forecasts_df_` (`horizon`, `date`, `forecast`).
+return value as `model.forecasts_df_` (`date`, `horizon`, `spec`, `value`).
 
 ### Forecast decomposition
 
 ```python
-dec = model.forecast_decomp(regressors_available, regressor_name="monthly_1")
+dec = model.forecast_decomp(regressors, regressor_name="indicator")
 ```
 
 Splits every horizon's point forecast into additive components

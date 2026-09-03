@@ -409,9 +409,10 @@ def test_ols_spec_in_combo_and_forecast():
     mc.fit(target, regressors)
     forecasts = mc.forecast()
 
-    # forecasts is now long-format: [date, horizon, spec, value]
+    # forecasts is long-format; ``forecast`` is the deprecated alias of ``value``.
     assert isinstance(forecasts, pd.DataFrame)
-    assert set(forecasts.columns) == {"date", "horizon", "spec", "value"}
+    assert list(forecasts.columns) == ["date", "horizon", "spec", "value", "forecast"]
+    assert (forecasts["forecast"] == forecasts["value"]).all()
 
     # Check all specs are present
     specs_in_forecasts = set(forecasts["spec"].unique())

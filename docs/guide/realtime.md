@@ -58,12 +58,10 @@ The returned frames use these columns:
 | `regressors` | `date`, `variable`, `frequency`, `value`, `vintage_date`, `metric` |
 | `outturns_data` | both frames concatenated into one vintage table |
 
-## Define the model
+## Define the model and refit at each vintage
 
 Define the same MIDAS specification for every vintage. The example forecasts
 the quarterly target from one monthly indicator.
-
-## Refit at each vintage
 
 `ForecastMIDAS` wraps `MIDAS` for the `forecast_realtime.RealTimeModel`
 runner. The runner filters the vintage table, refits the model, and stores each

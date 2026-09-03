@@ -15,7 +15,8 @@ maintainers = [
     {name="Paul Labonne", email="Paul.Labonne@bankofengland.co.uk"},
 ]
 
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 
 readme = "README.md"
 
@@ -31,19 +32,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pre-commit",
-    "pydoclint",
-    "ruff",
-    "pyarrow",
-    "pyfame",
-    "pytest",
-    "syrupy",
-]
-
 docs = [
     "zensical",
     "mkdocstrings[python]",
+]
+
+dev = [
+    "nowcast-midas[docs]",
+    "pre-commit",
+    "pydoclint",
+    "ruff",
+    "pytest",
 ]
 
 realtime = [
@@ -51,9 +50,19 @@ realtime = [
     "news_decomp >= 0.0.7",
 ]
 
+[project.urls]
+Homepage = "https://github.com/bank-of-england/nowcast-midas"
+Documentation = "https://bank-of-england.github.io/nowcast-midas/"
+Repository = "https://github.com/bank-of-england/nowcast-midas"
+Issues = "https://github.com/bank-of-england/nowcast-midas/issues"
+Changelog = "https://github.com/bank-of-england/nowcast-midas/blob/main/CHANGELOG.md"
+
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff.lint]
 # Exclude files and directories

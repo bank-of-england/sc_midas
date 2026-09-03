@@ -234,7 +234,7 @@ def test_vintage_sampler_recovers_from_matching_ragged_edge(vintage_date):
     np.testing.assert_allclose(fit.weights, sample.weights, atol=1e-10)
     forecast = model.forecast(sample.regressors).iloc[0]
     assert pd.Timestamp(forecast["date"]) == pd.Timestamp("2020-03-31")
-    np.testing.assert_allclose(forecast["forecast"], sample.target.iloc[-1]["value"])
+    np.testing.assert_allclose(forecast["value"], sample.target.iloc[-1]["value"])
 
 
 def test_vintage_sampler_rejects_unavailable_months():
@@ -287,14 +287,12 @@ def test_held_out_forecast_matches_truth_at_each_stage(method):
         row = forecast.iloc[0]
 
         assert pd.Timestamp(row["date"]) == sample.truth.target_date
-        np.testing.assert_allclose(
-            row["forecast"], sample.truth.target_value, atol=2e-5
-        )
+        np.testing.assert_allclose(row["value"], sample.truth.target_value, atol=2e-5)
         np.testing.assert_allclose(
             vintage.independent_forecast, sample.truth.target_value, atol=2e-5
         )
         np.testing.assert_allclose(
-            row["forecast"], vintage.independent_forecast, atol=2e-5
+            row["value"], vintage.independent_forecast, atol=2e-5
         )
 
 
@@ -355,8 +353,8 @@ def test_forecast_with_and_without_active_dummy():
     assert pd.Timestamp(inactive["date"]) != dummy_date
     active_expected = sample.forecast_truth(active_regressors, 1)
     inactive_expected = sample.forecast_truth(inactive_regressors, 1)
-    np.testing.assert_allclose(active["forecast"], active_expected, atol=2e-5)
-    np.testing.assert_allclose(inactive["forecast"], inactive_expected, atol=2e-5)
+    np.testing.assert_allclose(active["value"], active_expected, atol=2e-5)
+    np.testing.assert_allclose(inactive["value"], inactive_expected, atol=2e-5)
 
 
 @pytest.mark.parametrize("method", METHODS)
@@ -372,7 +370,7 @@ def test_forecast_decomposition_sums_to_forecast(method, vintage_index):
 
     assert set(decomposition["horizon"]) == {vintage.horizon}
     assert set(pd.to_datetime(decomposition["date"])) == {sample.truth.target_date}
-    np.testing.assert_allclose(contribution, forecast.iloc[0]["forecast"], atol=1e-9)
+    np.testing.assert_allclose(contribution, forecast.iloc[0]["value"], atol=1e-9)
 
 
 def test_forecast_uses_latest_finite_observation_after_trailing_missing_value(
@@ -429,6 +427,4 @@ def test_forecast_uses_latest_finite_observation_after_trailing_missing_value(
         atol=2e-5,
     )
     assert pd.Timestamp(forecast["date"]) == sample.truth.target_date
-    np.testing.assert_allclose(
-        forecast["forecast"], sample.truth.target_value, atol=2e-5
-    )
+    np.testing.assert_allclose(forecast["value"], sample.truth.target_value, atol=2e-5)

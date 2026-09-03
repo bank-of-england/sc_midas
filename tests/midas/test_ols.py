@@ -232,7 +232,7 @@ class TestOLSForecastDecomp:
         ]
         for h in [0, 1, 2]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-9)
 
         # intercept carries weight 1.0; the single regressor carries its coef.
@@ -254,7 +254,7 @@ class TestOLSForecastDecomp:
         assert {"x_lag0", "x_lag1", "x_lag2"}.issubset(components)
         for h in [0, 1]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-8)
 
     def test_sum_to_forecast_with_ar_lags(self):
@@ -270,7 +270,7 @@ class TestOLSForecastDecomp:
         assert {"ar_lag1", "ar_lag2"}.issubset(components)
         for h in [0, 1]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-8)
 
     @pytest.mark.parametrize("trailing_value", [np.nan, np.inf])
@@ -309,7 +309,7 @@ class TestOLSForecastDecomp:
             decomposition_sum = decomposition.loc[
                 decomposition["horizon"] == horizon, "contribution"
             ].sum()
-            forecast_value = forecast.loc[
-                forecast["horizon"] == horizon, "forecast"
-            ].iloc[0]
+            forecast_value = forecast.loc[forecast["horizon"] == horizon, "value"].iloc[
+                0
+            ]
             np.testing.assert_allclose(decomposition_sum, forecast_value)

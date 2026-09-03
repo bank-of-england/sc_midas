@@ -139,6 +139,9 @@ class TestMIDASFit:
         fig, ax = m.plot_fit(horizon=0)
         assert fig is not None
         assert ax is not None
+        # Actual and fitted series are both drawn.
+        assert len(ax.lines) >= 2
+        assert ax.get_legend() is not None
 
 
 class TestMIDASWeightRecovery:
@@ -180,6 +183,9 @@ class TestMIDASWeightRecovery:
         fig, ax = m.plot_weights(horizon=0)
         assert fig is not None
         assert ax is not None
+        # One drawn artist per lag weight (line or bar).
+        assert len(ax.lines) + len(ax.patches) >= 1
+        assert ax.get_xlabel() or ax.get_ylabel() or ax.get_title()
 
 
 class TestMIDASForecast:
@@ -205,11 +211,13 @@ class TestMIDASForecast:
         m.fits_[0] = fit
         # Manually set a forecasts_df_ so plot_forecast works
         m.forecasts_df_ = pd.DataFrame(
-            {"horizon": [0], "date": [pd.Timestamp("2020-01-01")], "forecast": [1.0]}
+            {"horizon": [0], "date": [pd.Timestamp("2020-01-01")], "value": [1.0]}
         )
         fig, ax = m.plot_forecast(horizon=0)
         assert fig is not None
         assert ax is not None
+        assert len(ax.lines) >= 1
+        assert ax.get_legend() is not None
 
     def test_forecast_accuracy_h0(self):
         """Noiseless h=0: out-of-sample forecast ≈ held-out actual.
@@ -237,7 +245,7 @@ class TestMIDASForecast:
         # information set covers it (h=0 needs contemporaneous X).
         regressors_fc = regressors[regressors["date"] <= held_out_date]
         fc = m.forecast(regressors_fc)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=0.05)
 
     def test_forecast_accuracy_h4(self):
@@ -279,7 +287,7 @@ class TestMIDASForecast:
         regressors_fc = regressors[regressors["date"] <= last_train_date]
         fc = m.forecast(regressors_fc)
         row = fc.loc[fc["horizon"] == H].iloc[0]
-        predicted = row["forecast"]
+        predicted = row["value"]
 
         # The model must anchor on the latest available X (X_T), not one
         # quarter further forward.
@@ -332,7 +340,7 @@ class TestMIDASForecast:
         m = MIDAS(method="almon", n_lags=K, horizons=[0]).fit(target_train, regressors)
         regressors_fc = regressors[regressors["date"] <= held_out_date]
         fc = m.forecast(regressors_fc)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=0.05)
 
     def test_forecast_accuracy_h4_ragged(self):
@@ -378,7 +386,7 @@ class TestMIDASForecast:
         ragged_cutoff = last_train_date - pd.DateOffset(months=1)
         regressors_fc = regressors[regressors["date"] <= ragged_cutoff]
         fc = m.forecast(regressors_fc)
-        predicted = fc.loc[fc["horizon"] == H, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == H, "value"].iloc[0]
         np.testing.assert_allclose(predicted, actual, atol=0.05)
 
 
@@ -410,7 +418,8 @@ class TestMIDASDataFrameFit:
         target, regressors = self._make_dataframes()
         m = MIDAS(method="almon", n_lags=K, horizons=[0, 1, 2]).fit(target, regressors)
         fc = m.forecast(regressors)
-        assert list(fc.columns) == ["horizon", "date", "forecast"]
+        assert list(fc.columns) == ["date", "horizon", "spec", "value", "forecast"]
+        assert (fc["forecast"] == fc["value"]).all()  # deprecated alias
         assert len(fc) == 3  # one row per horizon
 
     def test_forecast_adds_gamma_and_ar_when_x_missing(self):
@@ -451,7 +460,7 @@ class TestMIDASDataFrameFit:
         )
         fc = m.forecast(regressors_fc)
 
-        predicted = float(fc.loc[fc["horizon"] == 0, "forecast"].iloc[0])
+        predicted = float(fc.loc[fc["horizon"] == 0, "value"].iloc[0])
         # x contribution is skipped; forecast keeps alpha + gamma + AR.
         expected = 1.0 + 2.0 + (20.0 * 0.5 + 10.0 * -0.25)
         assert predicted == pytest.approx(expected)
@@ -716,7 +725,7 @@ class TestMIDASDummy:
         ).fit(target, regressors)
 
         fc = m.forecast(regressors)
-        predicted = fc.loc[fc["horizon"] == 0, "forecast"].iloc[0]
+        predicted = fc.loc[fc["horizon"] == 0, "value"].iloc[0]
         # Forecast date is outside dummy period; should be close to true alpha
         assert abs(predicted - self.TRUE_ALPHA) < 2.0, (
             f"Forecast looks contaminated by dummy: {predicted}"
@@ -808,7 +817,7 @@ class TestMIDASARLags:
         # Filter regressors to have max date = info_date
         regressors_fc = regressors.loc[regressors["date"] <= info_date].copy()
         fc = model.forecast(regressors_fc)
-        predicted = float(fc.loc[fc["horizon"] == horizon, "forecast"].iloc[0])
+        predicted = float(fc.loc[fc["horizon"] == horizon, "value"].iloc[0])
 
         actual_date = info_date + pd.DateOffset(months=3 * horizon)
         actual = float(
@@ -837,7 +846,7 @@ class TestMIDASForecastDecomp:
         ]
         for h in [0, 1, 2]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-9)
 
         # intercept carries weight 1.0; the MIDAS block weight is NaN.
@@ -869,7 +878,7 @@ class TestMIDASForecastDecomp:
         assert {"ar_lag1", "ar_lag2"}.issubset(components)
         for h in [0, 1]:
             s = decomp.loc[decomp["horizon"] == h, "contribution"].sum()
-            f = fc.loc[fc["horizon"] == h, "forecast"].iloc[0]
+            f = fc.loc[fc["horizon"] == h, "value"].iloc[0]
             np.testing.assert_allclose(s, f, atol=1e-8)
 
     def test_dummy_and_ar_components_when_x_missing(self):
@@ -913,5 +922,5 @@ class TestMIDASForecastDecomp:
         assert {"intercept", "dummy_0", "ar_lag1", "ar_lag2"}.issubset(components)
 
         s = decomp.loc[decomp["horizon"] == 0, "contribution"].sum()
-        f = float(fc.loc[fc["horizon"] == 0, "forecast"].iloc[0])
+        f = float(fc.loc[fc["horizon"] == 0, "value"].iloc[0])
         np.testing.assert_allclose(s, f, atol=1e-12)
