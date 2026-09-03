@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from ._compat import legacy_forecast_alias
 from .utils import (
     _build_ar_lag_matrix,
     _build_dummy_matrix,
@@ -299,6 +300,7 @@ class OLS:
             nobs=T,
         )
 
+    @legacy_forecast_alias
     def forecast(
         self,
         regressors_forecast: pd.DataFrame,

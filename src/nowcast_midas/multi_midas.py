@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
+from ._compat import legacy_forecast_alias
 from .specs import VariableSpec
 from .temporal_weights import get_weights
 from .utils import (
@@ -600,6 +601,7 @@ class MultiMIDAS:
     #  forecast                                                                #
     # ---------------------------------------------------------------------- #
 
+    @legacy_forecast_alias
     def forecast(
         self,
         regressors: pd.DataFrame,

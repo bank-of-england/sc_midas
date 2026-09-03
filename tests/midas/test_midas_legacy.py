@@ -418,7 +418,8 @@ class TestMIDASDataFrameFit:
         target, regressors = self._make_dataframes()
         m = MIDAS(method="almon", n_lags=K, horizons=[0, 1, 2]).fit(target, regressors)
         fc = m.forecast(regressors)
-        assert list(fc.columns) == ["date", "horizon", "spec", "value"]
+        assert list(fc.columns) == ["date", "horizon", "spec", "value", "forecast"]
+        assert (fc["forecast"] == fc["value"]).all()  # deprecated alias
         assert len(fc) == 3  # one row per horizon
 
     def test_forecast_adds_gamma_and_ar_when_x_missing(self):

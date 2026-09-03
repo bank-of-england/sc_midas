@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
+from ._compat import legacy_forecast_alias
 from .plots.midas import _MIDASPlots
 from .temporal_weights import _weight_jacobian, get_weights
 from .utils import _build_ar_lag_matrix, _build_dummy_matrix, _build_lag_matrix
@@ -422,6 +423,7 @@ class MIDAS(_MIDASPlots):
 
     # -- Forecast ---------------------------------------------------------------
 
+    @legacy_forecast_alias
     def forecast(
         self,
         regressors_forecast: pd.DataFrame,

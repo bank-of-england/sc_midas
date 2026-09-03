@@ -34,6 +34,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
+from ._compat import legacy_forecast_alias
 from .combo_weights import (
     _filter_sources,
     fit_average,
@@ -241,6 +242,7 @@ class MidasCombo(_ComboPlots):
 
         return self
 
+    @legacy_forecast_alias
     def forecast(self) -> pd.DataFrame:
         """Compute out-of-sample forecasts for 1qa .. horizons.
 
