@@ -1,219 +1,154 @@
-# Contributor Guide
-## Initial Setup
+# Contributing to nowcast-midas
 
-1. **Fork and clone the repository**
+## 1. Set up your fork
+
+Fork the repository on GitHub, then clone your fork:
+
 ```bash
-git clone https://github.com/bank-of-england/nowcast-midas.git
+git clone https://github.com/<your-github-user>/nowcast-midas.git
 cd nowcast-midas
 ```
 
-2. **Set up the development environment**
+Git names your fork `origin`; this command names the main repository `upstream`, so you can fetch updates from it:
 
-Create and activate a fresh environment, then install the package with the
-full contributor dependency set:
+```bash
+git remote add upstream https://github.com/bank-of-england/nowcast-midas.git
+```
+
+Install the package with dev dependencies in editable mode:
 ```bash
 pip install -e ".[dev]"
 ```
-The `dev` extra pulls in the docs dependencies as well, so this is the only
-install command you need.
 
-3. **Install pre-commit hooks**
+Install the pre-commit hooks:
 ```bash
 pre-commit install
 ```
 
-Pre-commit runs the following checks when you commit changes:
+The hooks make sure everything is OK:
 
-- Ruff's linter, with automatic fixes where possible
-- Ruff's formatter
-- API documentation generation from the public exports in `src/nowcast_midas`
-- NumPy-style docstring validation with `pydoclint`
+- Ruff linting, with automatic fixes where possible
+- Ruff formatting
+- API documentation generation in `docs/api.md`
+- NumPy-style docstring checks with `pydoclint`
+- A Zensical documentation build
 - The full pytest suite
 
-The generated API manifest is written to `docs/api.md`. If a source module's
-public API changes, the hook updates that file so it can be included in the
-same commit. To run every hook across the repository without creating a
-commit, use:
+To run the same checks without making a commit:
 
 ```bash
 pre-commit run --all-files
 ```
 
-Pre-commit does not build the documentation site or distribution package; run
-the commands in the [Documentation](#documentation) and [Code Style](#code-style)
-sections when you need to check those artefacts.
+When the public API changes, update their exports and docstrings too; that part cannot be done automatically for you. What the hooks do is generating the doc and the `docs/api.md` from the export and docstrings.
 
-4. **Verify the installation**
-```bash
-pytest
+## 2. Code
+
+The `main` branch holds released code and accepts changes only through pull requests. Start each change from the main repository's `dev` branch, then open a pull request from your fork back to `dev`. Changes can accumulate there until the maintainers are ready to release a new version of the package.
+
+```text
+issue -> fork -> branch from upstream/dev -> develop and test -> push to fork -> PR to dev -> automatic checks and review -> merge to dev
 ```
 
-## Development Workflow
+Branch names such as `feature/<issue>`, `fix/<issue>`, and `docs/<topic>` make the work easy to spot. For commit subjects, the project uses [Conventional Commits](https://www.conventionalcommits.org/): `fix:`, `feat:`,
+`deps:`, `docs:`, and `chore:` are the usual choices. Release Please later turns these into the changelog, so it's important to follow this approach.
 
-### Branch Strategy
-
-- **`main`** — protected, release-only. No direct pushes; changes arrive by pull request from `dev`.
-- **`dev`** — integration branch. Open feature and fix branches from `dev` and merge them back into `dev`.
-- **Feature branches**: `feature/<issue>`
-- **Bug fixes**: `fix/<issue>`
-- **Documentation**: `docs/<topic>`
-
-## Protected Branches and Pull Requests
-
-All contributions must be submitted through a pull request. The `main` is protected, so contributors cannot push changes directly to it.
-
-Branch out from `dev`, commit and push your changes there, then open a pull request targeting `dev`. 
-
-### PR checks
-
-- **`package-quality`** — builds and inspects the distribution, runs Ruff lint and format checks, verifies the generated API docs, builds the documentation site in strict mode, and runs the test suite. This workflow must pass.
-- **`ecosystem`** ("Ecosystem gate") — builds this module's wheel, installs it into the ecosystem pinned by `opera-eco[test]`, and runs opera-eco's shared contract and pipeline tests.
-
-### Creating a Feature Branch
+Here is a typical start:
 
 ```bash
-git checkout dev
-git pull origin dev
-git checkout -b feature/xyz
+git fetch upstream
+git switch -c fix/123-short-description upstream/dev
 ```
 
-### Commit your changes
-
-Use [Conventional Commit](https://www.conventionalcommits.org/) subjects
-(`fix:`, `feat:`, `deps:`, `docs:`, `chore:`, ...); Release Please builds the
-changelog and the next version from them.
+When the change feels ready, add or update its tests and run:
 
 ```bash
-git add .
-git commit -m "fix: describe your change"
-git push
+pre-commit run --all-files
 ```
 
-## Code Standards
-
-### Code Style
-
-We use **Ruff** for formatting and linting:
+After committing the changes, push the branch to your fork:
 
 ```bash
-# Format the code.
-ruff format .
-
-# Check for lint issues.
-ruff check .
-
-# Fix issues that Ruff can resolve.
-ruff check . --fix
-
-# Check formatting without changing files.
-ruff format --check .
+git push -u origin fix/123-short-description
 ```
 
-## Documentation
+Then open a pull request to the `dev` branch of the main repository.
 
-The documentation site is built with Zensical. API pages are rendered by
-`mkdocstrings` from the public objects listed in each package `__all__`
-declaration. `docs/api.md` is the generated manifest that connects those
-objects to the API reference; edit the source docstrings and public exports,
-not the generated directives in that file.
+## 3. Submit a pull request
 
-The documentation dependencies are already installed with the `dev` extra
-(`pip install -e ".[dev]"`); `.[docs]` installs just those if you need a
-docs-only environment.
+Opening a PR to `dev` starts two workflows:
 
-Regenerate the API manifest explicitly when needed:
+* package-quality: essentially the pre-commit hooks plus checking that the package build is clean.
+* ecosystem: Checks that the code changes do not break compatibility with the OPERA ecosystem packages.
 
-```bash
-python scripts/generate_api_docs.py
+Package-quality must pass before your branch can be merged to dev but the ecosystem check is optional.
+
+## For maintainers:
+### 4. Release a version (for maintainers)
+
+When the changes in `dev` are ready to ship, a maintainer opens a pull request from `dev` to `main`. This triggers the package-quality and ecosystem workflows again.
+
+Once merged, Release Please will wake. It will read the new commits (that's why it's important to start commits with "fix:" "feat:" etc), updates the version and `CHANGELOG.md`, and opens a second pull request. Release Please is set up to increment +0.0.1 to the version number; if you want something else write the following in the PR message:
+`Release-As: x.y.z`.
+
+```text
+A contrib PR -> package-quality + ecosystem + review -> merge -> Release Please wakes up -> new PR with version + changelog updated -> package-quality -> auto-merge if package-quality is green -> New GitHub Tag Release
 ```
 
-Build the complete documentation site locally, including strict validation:
+The publication of the new GitHub Release starts two other workflows:
+* (1) publish-pypi: Publish the package version to PyPI.
+* (2) Doc deployment: Deploys the updated documentation.
 
-```bash
-zensical build --clean --strict
+### It's not finished!
+
+If the publication to PyPI is successful, the publish-pypi workflow will trigger yet another workflow:
+* update-ecosystem: PR to the main in the opera-eco repo with the new package version, the opera-eco checks are successful the PR merges automatically and Release Please will publish a new version of the opera-eco package.
+
+### The whole workflow
+
+```text
+------ Installation
+-> fork the repository
+-> clone your fork
+-> add the main repository as upstream
+-> pip install -e ".[dev]"
+-> pre-commit install
+
+------ Development
+-> branch from upstream/dev
+-> develop and test
+
+------ PR to dev
+-> push the branch to your fork
+-> open a PR from your fork to dev
+-> package-quality and ecosystem run
+-> review and merge to dev
+-> repeat until dev is ready to release
+
+------ PR to main
+-> open a PR from dev to main
+-> package-quality, ecosystem, and review
+-> merge to main
+
+------ Everything is automatic from here
+-> Release Please opens a version and changelog PR
+-> package-quality passes
+-> Release Please PR auto-merges
+-> GitHub creates the version tag and release
+-> documentation deploys to GitHub Pages
+-> publish-pypi publishes the package
+-> update-ecosystem starts
+-> update-ecosystem opens a PR in opera-eco
+-> opera-eco runs its own package-quality workflow
+-> auto-merge waits for that workflow
+-> opera-eco updates its nowcast-midas pin
 ```
 
-The continuous integration checks regenerate `docs/api.md` and fail if that
-produces a diff, so generated API documentation cannot become stale silently.
+### Workflow summaries
 
-### Naming Conventions
-
-- **Variables**: `snake_case`
-- **Functions/methods**: `snake_case`
-- **Classes**: `PascalCase`
-- **Constants**: `UPPER_SNAKE_CASE`
-- **Private functions/methods**: `_leading_underscore`
-
-## Submitting Changes
-
-### Before Submitting
-
-1. **Open an issue** to discuss the bug or feature.
-
-2. **Use the issue number in the branch name; for example, `fix/1-prior`.**
-
-3. **Make your changes**
-
-4. **Add a test for the change.**
-
-
-5. **Format, document, and test the code.**
-```bash
-ruff format
-ruff check .
-pytest
-```
-
-6. **Commit and push the changes** with a Conventional Commit subject.
-```bash
-git add .
-git commit -m "fix: describe your change (#1)"
-git push origin fix/1-prior
-```
-
-7. **Submit a pull request.**
-
-## Creating a Release (for maintainers)
-
-Releases are automated with [Release Please](https://github.com/googleapis/release-please).
-`release-please.yml` watches `main` for [Conventional Commits](https://www.conventionalcommits.org/)
-and opens or updates a release pull request carrying the next version and the
-generated `CHANGELOG.md` entries. Only recognised subject types
-(`fix:`, `feat:`, `deps:`, ...) are picked up; an untyped subject is ignored.
-
-`release-please-config.json` sets an `always-bump-patch` strategy, so every
-release is a patch bump: `fix:`, `feat:`, `deps:`, and breaking commits all
-take `0.0.1` to `0.0.2`. Commit types still organise the changelog but do not
-change the version bump. A `Release-As: 0.1.0` footer on a typed commit is an
-exact one-time override; it is not needed for normal changes.
-
-`release-please.yml` enables auto-merge on the release pull request, so GitHub
-merges it once the required `package-quality` check and branch protection pass.
-The `ecosystem` gate is deliberately skipped on Release Please pull requests
-(the version bump makes the candidate wheel run ahead of the pinned ecosystem),
-so it must not be a required check. Keep work on `dev` until it is ready for the
-automatic release path through `main`.
-
-When the release pull request merges, Release Please creates the `v<version>`
-tag and the GitHub Release. The published release then starts:
-
-- `publish-pypi.yml` — builds the distribution and publishes it to PyPI, then
-  triggers `update-ecosystem.yml` to re-pin `nowcast-midas` in `opera-eco`.
-- `deploy-docs.yml` — builds the documentation site and deploys it to GitHub Pages.
-
-Both also support manual dispatch against an existing tag.
-
-### One-time setup
-
-- Add a `RELEASE_PLEASE_TOKEN` repository secret: a token that can write
-  contents, issues, pull requests, tags, and releases. A plain `GITHUB_TOKEN`
-  will not do, because the release it creates must be able to trigger the
-  downstream publication and documentation workflows.
-- Enable **Allow auto-merge** in the repository settings.
-- In the `github-pages` environment, keep the `main` deployment branch rule
-  and add a `v*` tag rule. Release-triggered documentation runs use the release
-  tag and are rejected before deployment when that tag is not allowed.
-- Require the `package-quality` check on `main` (not `ecosystem` — it is
-  skipped on release pull requests, and a skipped required check blocks
-  auto-merge), and make sure required human reviews do not block the
-  automation pull requests.
+- **Package quality** checks pull requests to `main` or `dev` by building the package, checking the code and documentation, and running the tests.
+- **Ecosystem** runs the OPERA ecosystem contract and pipeline tests for pull requests to `main` or `dev`, except Release Please pull requests.
+- **Release Please** runs after changes reach `main`, then opens or updates the release pull request and enables auto-merge when appropriate.
+- **Publish to PyPI** builds and publishes the package after a release, then starts the ecosystem pin update.
+- **Deploy documentation** builds and deploys the documentation to GitHub Pages after a release.
+- **Update opera-eco pin** updates the pinned package version and generated APIs, then opens or updates an auto-merged pull request in `opera-eco`.
