@@ -26,6 +26,11 @@ repos:
         args: [--style=numpy, .]
         language: system
         pass_filenames: false
+      - id: build-docs
+        name: Build documentation
+        entry: zensical build --clean --strict
+        language: system
+        pass_filenames: false
       - id: pytest
         name: Run pytest
         entry: pytest
